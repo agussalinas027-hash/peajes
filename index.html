@@ -5,125 +5,268 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Control de peajes</title>
 <meta name="description" content="Subí las capturas de Mercado Pago y descargá el Excel de peajes.">
-<meta name="theme-color" content="#1e6b3a">
+<meta name="theme-color" content="#1b7a42">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Peajes">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231e6b3a'/%3E%3Ctext x='32' y='44' font-size='34' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'%3E$%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231b7a42'/%3E%3Ctext x='32' y='44' font-size='34' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'%3E$%3C/text%3E%3C/svg%3E">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
 <style>
-:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light;
---bg:#f6f7f5;--card:#fff;--tx:#1b1f1c;--mut:#667068;--bd:#dde2dc;--ac:#1e6b3a;--act:#fff;--warn:#fff4d6;--err:#b3261e}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#121512;--card:#1b1f1c;--tx:#eef1ee;--mut:#9aa59c;--bd:#2c332e;--ac:#4cbf78;--act:#0b1a10;--warn:#3a3217;--err:#ff8a80}}
-:root[data-theme="dark"]{color-scheme:dark;--bg:#121512;--card:#1b1f1c;--tx:#eef1ee;--mut:#9aa59c;--bd:#2c332e;--ac:#4cbf78;--act:#0b1a10;--warn:#3a3217;--err:#ff8a80}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
+:root{color-scheme:light;--bg:#f3f5f2;--card:#fff;--tx:#17201a;--mut:#56615a;--bd:#d3dbd4;--ac:#1b7a42;--ac2:#13603a;--acs:#e5f3e9;
+--w:#fff3c7;--wb:#dcaa00;--wt:#5e4500;--d:#e8f0ff;--db:#6f98e0;--dt:#1d4592;--err:#b3261e;--errs:#fdecea}
 *,*::before,*::after{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
-main{max-width:760px;margin:0 auto;padding:16px}
-h1{font-size:1.4rem;margin:8px 0 4px}p.s{color:var(--mut);margin:0 0 16px}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:14px}
-button{font:inherit;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:12px 16px;cursor:pointer}
-button.p{background:var(--ac);color:var(--act);border-color:var(--ac);font-weight:600}
-button:disabled{opacity:.5;cursor:default}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.drop{display:block;border:2px dashed var(--bd);border-radius:12px;padding:22px;text-align:center;color:var(--mut);cursor:pointer}
-.drop input{display:none}
-#msg{margin-top:10px;color:var(--mut);white-space:pre-line}#msg.e,#mmsg.e{color:var(--err)}
-.bar{height:6px;border-radius:3px;background:var(--bd);margin-top:10px;overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--ac);transition:width .3s}
-.tw{overflow-x:auto}
-table{border-collapse:collapse;width:100%;min-width:560px}
-th{font-size:.8rem;color:var(--mut);text-align:left;padding:4px}
-td{padding:3px}
-td input{width:100%;font:inherit;color:var(--tx);background:transparent;border:1px solid var(--bd);border-radius:8px;padding:8px}
-tr.w td input{background:var(--warn)}
-tr.d td input{background:rgba(70,130,220,.2)}
-td.o{font-size:.8rem;min-width:150px;max-width:240px}
-.ctl{margin-bottom:6px}
-.ctl label{display:flex;flex-direction:column;gap:2px;font-size:.8rem;color:var(--mut);flex:1;min-width:130px}
-.ctl select{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:8px}
-td.x button{padding:6px 10px}
-.tot{display:flex;justify-content:space-between;font-weight:700;font-size:1.1rem;margin:12px 0}
-.n{font-size:.85rem;color:var(--mut)}
-@media (max-width:620px){
-table{min-width:0}thead{display:none}
-tbody tr{display:grid;grid-template-columns:1fr 1fr auto;gap:6px;padding:8px 0;border-bottom:1px solid var(--bd)}
-tbody td{padding:0}
-td:nth-child(1){grid-column:1;grid-row:1}td:nth-child(3){grid-column:2;grid-row:1}td:nth-child(2){grid-column:1/3;grid-row:2}
-td.x{grid-column:3;grid-row:1/3;align-self:center}td.o{grid-column:1/4;grid-row:3;max-width:none}td.o:empty{display:none}
-}
-pre.raw{white-space:pre-wrap;font-size:.75rem;color:var(--mut);max-height:320px;overflow:auto;margin:6px 0 0}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--tx);font:19px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+[hidden]{display:none!important}
+.top{background:var(--ac);color:#fff;padding:calc(14px + env(safe-area-inset-top,0px)) 16px 14px}
+.top>div{max-width:640px;margin:0 auto;display:flex;gap:14px;align-items:center}
+.logo{flex:none;width:50px;height:50px;border-radius:14px;background:#fff;color:var(--ac);font-weight:800;font-size:30px;display:grid;place-items:center}
+.top h1{margin:0;font-size:1.4rem;line-height:1.2}.top p{margin:0;opacity:.92;font-size:.92rem}
+main{max-width:640px;margin:0 auto;padding:18px 16px 24px}
+.pasos{list-style:none;display:flex;padding:0;margin:0 0 20px;counter-reset:s}
+.pasos li{flex:1;text-align:center;font-size:.85rem;color:var(--mut);counter-increment:s;position:relative}
+.pasos li::before{content:counter(s);display:grid;place-items:center;width:38px;height:38px;margin:0 auto 4px;border-radius:50%;background:#dfe5df;color:var(--mut);font-weight:800;font-size:1.05rem;position:relative;z-index:1}
+.pasos li+li::after{content:"";position:absolute;top:19px;right:calc(50% + 22px);width:calc(100% - 44px);height:3px;background:#dfe5df}
+.pasos li.on{color:var(--tx);font-weight:800}.pasos li.on::before{background:var(--ac);color:#fff}
+.pasos li.ok::before{content:"✓";background:var(--acs);color:var(--ac)}
+h2{font-size:1.45rem;line-height:1.25;margin:0 0 6px}
+.ayuda{color:var(--mut);margin:0 0 18px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:20px;padding:18px;margin-bottom:16px}
+.elegir{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;border:3px dashed var(--ac);background:var(--acs);border-radius:20px;padding:30px 16px;text-align:center;cursor:pointer;color:var(--ac2);font-weight:800;font-size:1.3rem}
+.elegir input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.elegir .ic{font-size:3rem;line-height:1}
+.elegir small{font-weight:500;color:var(--mut);font-size:.95rem}
+.elegir:focus-within{outline:3px solid var(--ac);outline-offset:3px}
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:60px;font:inherit;font-weight:800;border-radius:16px;border:2px solid var(--bd);background:var(--card);color:var(--tx);padding:12px 18px;cursor:pointer;margin-top:12px;text-align:center;-webkit-tap-highlight-color:transparent}
+.btn.prim{background:var(--ac);border-color:var(--ac);color:#fff;box-shadow:0 3px 0 var(--ac2)}
+.btn.prim:active{transform:translateY(2px);box-shadow:none}
+.btn.xl{min-height:70px;font-size:1.3rem}
+.btn.peligro{color:var(--err);border-color:#e6b5b0}
+.btn.suave{border-color:transparent;background:transparent;color:var(--mut);font-weight:700}
+.btn:disabled{opacity:.4;box-shadow:none}
+.miniaturas{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:10px;margin-top:16px}
+.mini{position:relative;height:130px;border-radius:12px;overflow:hidden;border:1px solid var(--bd);background:#fff}
+.mini img{width:100%;height:100%;object-fit:cover;object-position:top}
+.mini button{position:absolute;top:5px;right:5px;width:40px;height:40px;border-radius:50%;border:0;background:rgba(0,0,0,.7);color:#fff;font-size:20px;cursor:pointer}
+.cuenta{margin-top:12px;font-weight:700;text-align:center;color:var(--ac2)}
+.consejos summary{cursor:pointer;font-weight:700;color:var(--ac2);min-height:48px;display:flex;align-items:center}
+.consejos ul{margin:4px 0 0;padding-left:24px;color:var(--mut)}.consejos li{margin:6px 0}
+.leyendo{text-align:center;padding:26px 18px}
+.leyendo img{width:110px;height:150px;border-radius:12px;border:1px solid var(--bd);object-fit:cover;object-position:top}
+.barra-prog{height:16px;border-radius:8px;background:#dfe5df;overflow:hidden;margin:20px 0 10px}.barra-prog i{display:block;height:100%;width:0;background:var(--ac);transition:width .4s}
+.grande{font-size:1.35rem;font-weight:800;margin:16px 0 4px}
+.resumen{background:var(--ac);color:#fff;border:0;text-align:center;padding:20px}
+.resumen .tot{font-size:2.4rem;font-weight:800;line-height:1.1;margin:4px 0}
+.resumen .cnt{font-size:1.05rem;opacity:.95}
+.estado{border-radius:16px;padding:14px 16px;margin-bottom:16px;font-weight:700}
+.estado.w{background:var(--w);border:2px solid var(--wb);color:var(--wt)}
+.estado.ok{background:var(--acs);border:2px solid #9fd3b0;color:var(--ac2)}
+.estado .btn{margin-top:10px;min-height:54px;background:#fff}
+.aviso-e{background:var(--errs);border:2px solid #efb8b2;color:var(--err);border-radius:14px;padding:12px 14px;margin-bottom:12px;font-weight:600;white-space:pre-line}
+.aviso-i{background:#fff;border:2px solid var(--bd);border-radius:14px;padding:12px 14px;margin-bottom:12px;white-space:pre-line}
+.filtros{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 6px}
+.filtros button{flex:1 1 auto;min-height:52px;border-radius:26px;border:2px solid var(--bd);background:var(--card);font:inherit;font-size:.95rem;font-weight:700;padding:0 16px;color:var(--tx);cursor:pointer}
+.filtros button[aria-pressed="true"]{background:var(--tx);color:#fff;border-color:var(--tx)}
+.orden{display:flex;justify-content:flex-end;margin-bottom:4px}
+.orden button{font:inherit;font-size:.9rem;font-weight:700;color:var(--ac2);background:none;border:0;min-height:44px;cursor:pointer;padding:0 4px}
+.dia{display:flex;justify-content:space-between;gap:10px;font-size:1rem;color:var(--mut);margin:18px 4px 8px;font-weight:800}
+.pj{display:grid;grid-template-columns:1fr auto;gap:4px 12px;width:100%;text-align:left;font:inherit;color:var(--tx);background:var(--card);border:2px solid var(--bd);border-radius:16px;padding:14px 16px;margin-bottom:10px;min-height:74px;cursor:pointer;align-items:center;-webkit-tap-highlight-color:transparent}
+.pj:active{background:#f6f8f6}
+.pj .pn{font-weight:800;font-size:1.15rem;min-width:0;overflow-wrap:anywhere}
+.pj .pm{font-weight:800;font-size:1.2rem;white-space:nowrap}
+.pj .px{grid-column:1/-1;font-size:.92rem;line-height:1.35}
+.pj.w{background:var(--w);border-color:var(--wb)}.pj.w .px{color:var(--wt);font-weight:700}
+.pj.d{border-color:var(--db)}.pj.d .px{color:var(--dt);font-weight:600}
+.pj .vacio{color:var(--wt);font-style:italic}
+.vacia{text-align:center;color:var(--mut);padding:24px 8px}
+.excluir summary{cursor:pointer;font-weight:800;min-height:48px;display:flex;align-items:center;gap:6px}
+.excluir label{display:flex;gap:14px;align-items:center;padding:12px 2px;border-top:1px solid var(--bd);min-height:64px;cursor:pointer}
+.excluir input{flex:none;width:30px;height:30px;accent-color:var(--err)}
+.excluir label b{display:block}.excluir small{color:var(--mut);font-size:.9rem}
+.pie{position:sticky;bottom:0;z-index:5;background:rgba(243,245,242,.97);border-top:1px solid var(--bd);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px))}
+.pie>div{max-width:640px;margin:0 auto}
+.pie .btn{margin-top:0}.pie .btn+.btn{margin-top:8px;min-height:52px;font-size:1.05rem}
+dialog{border:0;border-radius:24px;padding:0;width:min(560px,calc(100% - 16px));max-height:calc(100% - 16px);color:var(--tx);background:var(--card)}
+dialog::backdrop{background:rgba(0,0,0,.55)}
+.dlg{padding:20px}
+.dlg h2{margin-bottom:4px}
+.dlg label{display:block;font-weight:800;margin-top:16px}
+.dlg input{display:block;width:100%;font:inherit;font-size:1.25rem;padding:12px 14px;border:2px solid var(--bd);border-radius:14px;margin-top:6px;background:#fff;color:var(--tx);min-height:60px}
+.dlg input:focus{border-color:var(--ac);outline:3px solid var(--acs)}
+.pesos{display:flex;align-items:center;gap:8px}.pesos span{font-size:1.5rem;font-weight:800;margin-top:6px}
+figure{margin:14px 0 0}figcaption{font-size:.95rem;color:var(--mut);margin-bottom:6px;font-weight:600}
+canvas{display:block;width:100%;border-radius:12px;border:2px solid var(--bd)}
+.nota{border-radius:14px;padding:12px 14px;margin-top:12px;font-weight:700}
+.nota.w{background:var(--w);border:2px solid var(--wb);color:var(--wt)}
+.nota.d{background:var(--d);border:2px solid var(--db);color:var(--dt);font-weight:600}
+.error{color:var(--err);font-weight:800;margin-top:12px}
+.toast{position:fixed;left:50%;bottom:calc(160px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#17201a;color:#fff;padding:14px 22px;border-radius:16px;font-weight:700;z-index:50;width:max-content;max-width:calc(100% - 32px);text-align:center;box-shadow:0 8px 28px rgba(0,0,0,.3)}
+.tecnico{margin-top:24px;font-size:.8rem;color:var(--mut)}.tecnico summary{min-height:44px;display:flex;align-items:center;cursor:pointer}
+pre.raw{white-space:pre-wrap;font-size:.75rem;max-height:320px;overflow:auto;margin:6px 0 0}
 </style>
 </head>
 <body>
+<header class="top"><div><div class="logo" aria-hidden="true">$</div><div><h1>Control de peajes</h1><p>De las capturas de Mercado Pago al Excel</p></div></div></header>
+
 <main>
-<h1>Control de peajes</h1>
-<p class="s">Subí las capturas de Mercado Pago y descargá el Excel listo para la empresa. Las capturas se leen en tu propio celular o computadora: no se mandan a ningún lado.</p>
+<ol class="pasos" id="pasos"><li>Capturas</li><li>Revisar</li><li>Excel</li></ol>
 
-<div class="card">
-<label class="drop" id="drop"><input type="file" id="files" accept="image/*" multiple>
-<strong>Tocá para elegir las capturas</strong><br><span id="fc">Ninguna seleccionada</span></label>
-<label class="drop" style="margin-top:10px;padding:14px"><input type="file" id="prev" accept=".xlsx"><strong>Excel anterior (opcional)</strong><br><span id="pc">Subilo para quedarte solo con los peajes nuevos</span></label>
-<div class="row" style="margin-top:12px">
-<button class="p" id="go" disabled>Leer capturas</button>
-<button id="stop" hidden>Detener</button>
-</div>
-<div class="bar" id="bar" hidden><i></i></div>
-<div id="msg"></div>
-<p class="n" style="margin:10px 0 0">Si las capturas te llegan por WhatsApp, pedí que las manden como <strong>documento</strong> (no como foto), así llegan nítidas.</p>
-</div>
+<!-- PASO 1: elegir capturas -->
+<section id="paso1">
+  <div class="aviso-i" id="mas" hidden></div>
+  <h2>Elegí las capturas</h2>
+  <p class="ayuda">Son las capturas de la pantalla <b>“Actividad”</b> de Mercado Pago. Podés elegir varias a la vez.</p>
+  <label class="elegir"><input type="file" id="files" accept="image/*" multiple><span class="ic" aria-hidden="true">📷</span>Tocá acá para elegir<small>Fotos o capturas guardadas en el celular</small></label>
+  <div class="miniaturas" id="minis"></div>
+  <div class="cuenta" id="fc"></div>
+  <div class="aviso-e" id="err1" hidden></div>
+  <button class="btn prim xl" id="go" disabled>Leer las capturas →</button>
+  <button class="btn suave" id="volver" hidden>← Volver a la lista sin agregar nada</button>
+  <details class="consejos card" style="margin-top:20px"><summary>💡 Consejos para que salga bien</summary>
+    <ul>
+      <li>Si te las mandan por WhatsApp, que las manden como <b>documento</b>, no como foto. Así llegan nítidas.</li>
+      <li>Antes de sacar la captura, cerrá la <b>burbuja amarilla</b> del asistente de Mercado Pago, porque tapa los importes.</li>
+      <li>Las capturas largas (de varias pantallas) funcionan bien.</li>
+      <li>Las capturas no salen de tu celular: se leen acá mismo.</li>
+    </ul>
+  </details>
+</section>
 
-<div class="card" id="res" hidden>
-<div class="n" style="margin-bottom:8px">Revisá los datos antes de descargar. En amarillo (⚠) están los peajes dudosos, donde el lector no estaba seguro: compará con la captura. En azul (⧉) están los posibles repetidos: misma fecha, peaje e importe.</div>
-<details class="card" id="exd" open style="margin:0 0 10px;padding:10px 14px"><summary><strong>Excluir peajes</strong><span id="exs" class="n"></span></summary><div class="n" style="margin:6px 0">Marcá los peajes que no van en el Excel. Se excluyen todos los pasos de ese peaje.</div><div id="exl"></div></details>
-<div class="row ctl"><label>Ordenar por<select id="vs"><option value="fa">Fecha: más vieja primero</option><option value="fd">Fecha: más nueva primero</option><option value="p">Peaje (A–Z)</option><option value="ia">Importe: menor a mayor</option><option value="id">Importe: mayor a menor</option></select></label><label>Peaje<select id="vp"><option value="">Todos</option></select></label><label>Mostrar<select id="vf"><option value="">Todos</option><option value="d">Solo dudosos</option><option value="r">Solo repetidos</option><option value="y">Solo ya cargados</option><option value="x">Solo excluidos</option></select></label></div>
-<div class="n" id="shown" style="margin-bottom:6px"></div>
-<div class="tw"><table><thead><tr><th>Fecha</th><th>Peaje</th><th>Importe</th><th>Obs.</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>
-<datalist id="pl"></datalist>
-<div class="row" style="margin-top:8px"><button id="add">+ Agregar fila</button></div>
-<div class="tot"><span>Total (<span id="cnt">0</span> peajes)</span><span id="tot">$ 0,00</span></div>
-<button class="p" id="dl" style="width:100%">Descargar Excel</button>
-<p class="n">Si hay capturas que se superponen, puede aparecer un peaje repetido: borralo con ✕. Dos pasos iguales el mismo día pueden ser reales.</p>
-<details id="rawd" hidden><summary class="n">Ver el texto que leyó el lector (para encontrar errores)</summary><pre class="raw" id="raw"></pre></details>
-</div>
-<div class='card' id='mg'>
-<strong>Unir Excel</strong>
-<p class='n' style='margin:4px 0 10px'>Elegí dos o más Excel de peajes. Se cargan en la tabla de arriba para que los revises, y desde ahí descargás uno solo, ordenado por fecha y con un único TOTAL.</p>
-<label class='drop' style='padding:14px'><input type='file' id='mf' accept='.xlsx' multiple><span id='mfc'>Tocá para elegir los Excel</span></label>
-<label class='n' style='display:flex;gap:8px;margin:10px 0;align-items:center'><input type='checkbox' id='mdup'> Quitar las filas idénticas que estén en más de un archivo</label>
-<div id='mmsg' class='n' style='white-space:pre-line'></div>
-</div>
+<!-- PASO 1b: leyendo -->
+<section id="leyendo" class="card leyendo" hidden>
+  <img id="leyImg" alt="">
+  <div class="grande" id="msg">Leyendo…</div>
+  <div class="barra-prog"><i id="prog"></i></div>
+  <p class="ayuda" style="margin:0">Tarda unos segundos por captura.<br>No cierres esta página.</p>
+  <button class="btn" id="stop">Detener</button>
+</section>
+
+<!-- PASO 2: revisar -->
+<section id="paso2" hidden>
+  <div class="card resumen"><div>Total a reintegrar</div><div class="tot" id="tot">$ 0,00</div><div class="cnt" id="cnt"></div></div>
+  <div id="avisos"></div>
+  <div id="estado"></div>
+  <div class="filtros" id="filtros">
+    <button type="button" data-f="todos">Todos</button>
+    <button type="button" data-f="rev">⚠ Para revisar</button>
+    <button type="button" data-f="rep">Repetidos</button>
+  </div>
+  <div class="orden"><button type="button" id="orden"></button></div>
+  <div id="lista"></div>
+  <button class="btn" id="add">＋ Agregar un peaje a mano</button>
+  <details class="excluir card" id="exd" style="margin-top:20px"><summary>🚫 Peajes que la empresa no paga <span id="exs"></span></summary>
+    <p class="ayuda" style="margin:4px 0 6px">Marcá los peajes que <b>no</b> van en el Excel. Se sacan todos sus pasos. Queda guardado para la próxima vez.</p>
+    <div id="exl"></div>
+  </details>
+  <button class="btn" id="mas2">📷 Agregar más capturas</button>
+  <button class="btn suave" id="reset">Empezar de nuevo</button>
+  <details class="tecnico" id="rawd" hidden><summary>Detalles técnicos (texto leído)</summary><pre class="raw" id="raw"></pre></details>
+</section>
 </main>
+
+<div class="pie" id="pie" hidden><div>
+  <button class="btn prim xl" id="dl">⬇ Descargar Excel</button>
+  <button class="btn" id="sh" hidden>📤 Enviar el Excel (WhatsApp, mail…)</button>
+</div></div>
+
+<dialog id="hoja"><form class="dlg" id="hf" novalidate>
+  <h2 id="hT" tabindex="-1" style="outline:none">Revisar peaje</h2>
+  <div class="nota w" id="hAviso" hidden></div>
+  <div class="nota d" id="hRep" hidden></div>
+  <figure id="hFig" hidden><figcaption>Así se ve en la captura:</figcaption><canvas id="hCan"></canvas></figure>
+  <label for="hP">Peaje</label><input id="hP" list="pl" autocomplete="off" autocapitalize="words">
+  <label for="hF">Fecha</label><input id="hF" type="date">
+  <label for="hI">Importe</label><div class="pesos"><span>$</span><input id="hI" inputmode="decimal" autocomplete="off" placeholder="0,00"></div>
+  <div class="error" id="hErr" hidden></div>
+  <button class="btn prim xl" type="submit" id="hOk">✓ Listo, está bien</button>
+  <button class="btn peligro" type="button" id="hDel">🗑 Borrar este peaje</button>
+  <button class="btn suave" type="button" id="hNo">Cancelar</button>
+</form></dialog>
+
+<dialog id="preg"><div class="dlg">
+  <h2 id="pT"></h2><p class="ayuda" id="pX" style="margin:8px 0 0"></p>
+  <button class="btn prim xl" id="pSi"></button>
+  <button class="btn" id="pNo"></button>
+</div></dialog>
+
+<datalist id="pl"></datalist>
+<div class="toast" id="toast" hidden role="status"></div>
+
 <script>
 const PEAJES=["Hudson","Dock Sud","Berazategui","Varela","Remedios","Alberti","Freeflow Au Illia","Paseo del Bajo","Ituzaingó","Posadas","Samborombón","Portico Villa Elisa","Gutierrez","Márquez","Bernal","Campana"];
 const $=id=>document.getElementById(id);
-let files=[],rows=[],ctl=null,uid=0,nf=0,raw=[];
+let files=[],rows=[],ctl=null,uid=0,nf=0,raw=[],archivos=new Map(),filtro="todos",orden="nuevos",bajado=false;
 const cmp=(a,b)=>(a.fecha||"9999").localeCompare(b.fecha||"9999")||(a.f-b.f)||(b.id-a.id);
-let vs="fa",vp="",vf="",prev=null;
-const act=()=>rows.filter(r=>!r.ya&&!r.exc);
-const fmt=n=>"$ "+Number(n||0).toLocaleString("es-AR",{minimumFractionDigits:2,maximumFractionDigits:2});
+const cmpNuevos=(a,b)=>(b.fecha||"0000").localeCompare(a.fecha||"0000")||(b.f-a.f)||(a.id-b.id);
+const act=()=>rows.filter(r=>!r.exc);
+const fmtN=n=>Number(n||0).toLocaleString("es-AR",{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmt=n=>"$ "+fmtN(n);
 const iso=(y,m,d)=>y+"-"+String(m).padStart(2,"0")+"-"+String(d).padStart(2,"0");
 const isoD=d=>iso(d.getFullYear(),d.getMonth()+1,d.getDate());
 const today=()=>isoD(new Date());
-const say=(t,e)=>{$("msg").textContent=t;$("msg").className=e?"e":""};
-const bar=p=>{$("bar").hidden=p==null;if(p!=null)$("bar").firstChild.style.width=Math.round(p*100)+"%"};
+const say=t=>{$("msg").textContent=t};
+const bar=p=>{$("prog").style.width=Math.round((p||0)*100)+"%"};
 const norm=t=>String(t||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/\s+/g," ").trim();
-$("pl").innerHTML=PEAJES.map(p=>`<option value="${p}">`).join("");
+const plural=(n,s,p)=>n+" "+(n===1?s:p);
+const incompleto=r=>!r.fecha||!String(r.peaje||"").trim()||!(r.importe>0);
 
-$("files").onchange=e=>{
-  files=[...e.target.files];
-  $("fc").textContent=files.length?files.length+(files.length===1?" captura seleccionada":" capturas seleccionadas"):"Ninguna seleccionada";
+function fechaLarga(f){
+  if(!f) return "Sin fecha";
+  const d=new Date(f+"T12:00:00");if(isNaN(d)) return f;
+  const s=d.toLocaleDateString("es-AR",{weekday:"long",day:"numeric",month:"long",...(d.getFullYear()!==new Date().getFullYear()?{year:"numeric"}:{})});
+  return s.charAt(0).toUpperCase()+s.slice(1);
+}
+let tT=null;
+function toast(t){const el=$("toast");el.textContent=t;el.hidden=false;clearTimeout(tT);tT=setTimeout(()=>el.hidden=true,3500)}
+function preguntar(titulo,texto,si,no){
+  return new Promise(res=>{
+    $("pT").textContent=titulo;$("pX").textContent=texto||"";$("pX").hidden=!texto;$("pSi").textContent=si;$("pNo").textContent=no;
+    const d=$("preg");
+    const fin=v=>{d.close();$("pSi").onclick=$("pNo").onclick=null;res(v)};
+    $("pSi").onclick=()=>fin(true);$("pNo").onclick=()=>fin(false);d.oncancel=e=>{e.preventDefault();fin(false)};
+    d.showModal();
+  });
+}
+
+/* ───────── Pantallas ───────── */
+function mostrar(p){
+  $("paso1").hidden=p!=="paso1";$("leyendo").hidden=p!=="leyendo";$("paso2").hidden=p!=="paso2";$("pie").hidden=p!=="paso2";
+  const n=p==="paso2"?2:1;
+  [...$("pasos").children].forEach((li,i)=>{li.className=i+1<n||(i===2&&bajado)?"ok":i+1===n?"on":""});
+  if(p==="paso1"){
+    $("mas").hidden=$("volver").hidden=!rows.length;
+    $("mas").textContent=rows.length?`Ya tenés ${plural(rows.length,"peaje leído","peajes leídos")}. Lo que leas ahora se suma a la lista.`:"";
+  }
+  window.scrollTo(0,0);
+}
+
+/* ───────── Paso 1: elegir ───────── */
+function pintarMinis(){
+  const box=$("minis");box.innerHTML="";
+  files.forEach((f,i)=>{
+    const d=document.createElement("div");d.className="mini";
+    const img=new Image();img.alt="";img.src=f._url||(f._url=URL.createObjectURL(f));
+    const x=document.createElement("button");x.type="button";x.textContent="✕";x.setAttribute("aria-label","Quitar esta captura");
+    x.onclick=()=>{URL.revokeObjectURL(f._url);files.splice(i,1);pintarMinis()};
+    d.append(img,x);box.appendChild(d);
+  });
+  $("fc").textContent=files.length?(files.length===1?"1 captura elegida":files.length+" capturas elegidas"):"";
   $("go").disabled=!files.length;
-};
+}
+$("files").onchange=e=>{files.push(...e.target.files);e.target.value="";$("err1").hidden=true;pintarMinis()};
+$("go").onclick=()=>files.length&&procesarArchivos(files.slice());
+$("volver").onclick=()=>mostrar("paso2");
+$("stop").onclick=()=>ctl&&ctl.abort();
 
 /* ───────── Lector de texto (OCR) ───────── */
 let worker=null;
 async function lector(){
   if(worker) return worker;
-  if(!window.Tesseract) throw new Error("No se pudo cargar el lector de texto. Revisá la conexión a internet y recargá la página.");
-  say("Preparando el lector de texto (la primera vez tarda un poco más, después queda guardado)…");
+  if(!window.Tesseract) throw new Error("No se pudo cargar el lector. Revisá que haya internet y volvé a abrir la página.");
+  say("Preparando el lector (la primera vez tarda un poco más)…");
   worker=await Tesseract.createWorker("spa",1,{logger:m=>{
-    if(m.status&&/load|download|initial/i.test(m.status)&&m.progress<1) say("Preparando el lector de texto… "+Math.round((m.progress||0)*100)+"%");
+    if(m.status&&/load|download|initial/i.test(m.status)&&m.progress<1) say("Preparando el lector… "+Math.round((m.progress||0)*100)+"%");
   }});
   await worker.setParameters({tessedit_pageseg_mode:"11",preserve_interword_spaces:"1"});
   return worker;
@@ -174,18 +317,17 @@ function dinero(t){
     const z=t.match(/[-–—−]\s*\$/);
     return z?{v:NaN,ok:false,neg:true,i:z.index,txt:t.slice(z.index).trim()}:null;
   }
-  const s=last[2].replace(/[.,]+$/,""),x=last[3];let v=NaN,ok=false,q;
+  const s=last[2].replace(/[.,]+$/,""),x=last[3];let v=NaN,ok=false,entero=false,q;
   if((q=s.match(/^(\d{1,3}(?:[.,]\d{3})*),(\d{2})$/))){v=+(q[1].replace(/\D/g,"")+"."+q[2]);ok=true}
   else if(x&&/^\d{1,3}(?:\.\d{3})*$/.test(s)) v=+(s.replace(/\D/g,"")+"."+x);
   else if((q=s.match(/^(\d{1,3}(?:\.\d{3})*)\.(\d{2})$/))) v=+(q[1].replace(/\D/g,"")+"."+q[2]);
   else if((q=s.match(/^(\d{1,3}(?:\.\d{3})*)(\d{2})$/))) v=+(q[1].replace(/\D/g,"")+"."+q[2]);
   // Importe redondo: Mercado Pago no muestra ",00" (ej. "$ 6.808" = 6808,00).
-  else if(/^\d{1,3}(?:\.\d{3})*$/.test(s)&&!x){v=+s.replace(/\D/g,"");ok=true;var entero=true}
-  return {v,ok:ok&&v>0,entero:!!entero,neg:!!last[1],i:last.index,txt:t.slice(last.index).trim()};
+  else if(/^\d{1,3}(?:\.\d{3})*$/.test(s)&&!x){v=+s.replace(/\D/g,"");ok=true;entero=true}
+  return {v,ok:ok&&v>0,entero,neg:!!last[1],i:last.index,txt:t.slice(last.index).trim()};
 }
 
 const esPeajeTxt=t=>norm(t).replace(/[^a-z ]/g," ").split(" ").some(w=>w.length>=4&&w.length<=7&&sim(w,"peaje")>=0.8);
-const RUIDO=/\b(pago|de|peaje|peajes|telepase|tele|pase)\b/g;
 
 function nombrePeaje(titulo,todo){
   const prueba=txt=>{
@@ -285,34 +427,35 @@ function movimientos(filas,ref){
     if(r.tituloIlegible){cerrar();fm=true;continue}
     const mon=dinero(r.text);
     if(!mon){const h=fechaTitulo(r.text,ref);if(h){cerrar();fecha=h.fecha;rel=h.rel;fm=false;continue}}
-    if(mon){cerrar();const dw=r.ws.filter(w=>/\d/.test(w.t));cur={fecha,rel,fm,mon,tit:r.text.slice(0,mon.i),lin:[r.text],y1:r.y1,h:r.h,conf:dw.length?Math.min(...dw.map(w=>w.c)):r.conf};continue}
+    if(mon){cerrar();const dw=r.ws.filter(w=>/\d/.test(w.t));cur={fecha,rel,fm,mon,tit:r.text.slice(0,mon.i),lin:[r.text],y0:r.y0,y1:r.y1,h:r.h,conf:dw.length?Math.min(...dw.map(w=>w.c)):r.conf};continue}
     const pj=esPeajeTxt(r.text);
     if(cur&&r.y0-cur.y1<cur.h*2.5&&!(pj&&cur.lin.slice(1).some(esPeajeTxt))){cur.lin.push(r.text);cur.y1=r.y1;continue}
     cerrar();
     // Renglón suelto que dice "peaje" sin importe: movimiento tapado al unir la captura larga.
     // Lo que sigue hasta el próximo título puede tener la fecha corrida (el título pudo quedar tapado).
-    if(pj){out.push({fecha,rel,fm,cortado:true,lin:[r.text]});fm=true}
+    if(pj){out.push({fecha,rel,fm,cortado:true,lin:[r.text],y0:r.y0,y1:r.y1});fm=true}
   }
   cerrar();
   const res=[];
   for(const b of out){
     const todo=b.lin.join(" ");
     if(/devoluc|reintegr|cancelad|reembols/i.test(norm(todo))) continue;
-    if(b.cortado){res.push({fecha:b.fecha,peaje:"",importe:0,dudoso:true,why:"captura cortada: falta nombre e importe, completalo mirando la captura"+(b.fm?" (y verificá la fecha)":"")});continue}
+    const pos={yA:b.y0,yB:b.y1};
+    if(b.cortado){res.push({fecha:b.fecha,peaje:"",importe:0,dudoso:true,why:"Este peaje quedó tapado en la captura. Fijate el nombre y el importe y completalos"+(b.fm?" (y revisá la fecha)":"")+".",...pos});continue}
     const n=nombrePeaje(b.tit,todo);
     const dicePeaje=esPeajeTxt(todo);
     if(!dicePeaje&&!n.seguro) continue; // no es un peaje (transferencias, compras, etc.)
     const why=[];
-    if(!b.fecha) why.push("sin fecha");
-    else if(b.fm) why.push("verificá la fecha (hay un título tapado o borroso más arriba)");
-    else if(b.rel&&!ref.seguro) why.push("fecha “Hoy/Ayer”: verificala");
-    if(!n.seguro) why.push(n.peaje?"nombre no reconocido":"falta el nombre");
+    if(!b.fecha) why.push("Falta la fecha");
+    else if(b.fm) why.push("Revisá la fecha (más arriba hay un título tapado)");
+    else if(b.rel&&!ref.seguro) why.push("Revisá la fecha (decía “Hoy” o “Ayer”)");
+    if(!n.seguro) why.push(n.peaje?"Revisá el nombre del peaje":"Falta el nombre del peaje");
     // Si el importe no tiene la forma exacta "1.571,11" no se adivina: queda en 0 para completarlo a mano.
     const impOk=b.mon.ok&&b.mon.v>0;
-    if(!impOk) why.push(`importe ilegible (se leyó “${b.mon.txt}”): completalo`);
-    else if(b.conf<40||(b.mon.entero&&b.conf<70)) why.push("lectura poco clara: compará el importe");
-    if(!dicePeaje) why.push("no dice “Pago de peaje”");
-    res.push({fecha:b.fecha,peaje:n.peaje,importe:impOk?Math.round(b.mon.v*100)/100:0,dudoso:why.length>0,why:why.join(" · "),cf:Math.round(b.conf)});
+    if(!impOk) why.push("No se pudo leer el importe: completalo");
+    else if(b.conf<40||(b.mon.entero&&b.conf<70)) why.push("Revisá el importe");
+    if(!dicePeaje) why.push("No dice “Pago de peaje”");
+    res.push({fecha:b.fecha,peaje:n.peaje,importe:impOk?Math.round(b.mon.v*100)/100:0,dudoso:why.length>0,why:why.join(". ")+(why.length?".":""),cf:Math.round(b.conf),leido:b.mon.txt,...pos});
   }
   return res;
 }
@@ -357,183 +500,185 @@ async function leerCaptura(f,avance){
   return {movs:movimientos(filas,ref),texto:filas.map(r=>r.tituloIlegible?"[título de fecha ilegible: "+r.text+"]":r.text).join("\n"),chica:W<500,W};
 }
 
+let avisos=[];
 async function procesarArchivos(lista){
   ctl=new AbortController();
-  $("go").disabled=true;$("stop").hidden=false;bar(0);
-  let fail=[],chicas=[],cort=0,antes=rows.length;
-  try{await lector()}catch(e){say(e.message,true);$("stop").hidden=true;$("go").disabled=!files.length;bar(null);return}
+  mostrar("leyendo");bar(0);
+  if(lista[0]) $("leyImg").src=lista[0]._url||(lista[0]._url=URL.createObjectURL(lista[0]));
+  const fail=[],chicas=[];let cort=0;const antes=rows.length;
+  try{await lector()}catch(e){$("err1").textContent=e.message;$("err1").hidden=false;mostrar(rows.length?"paso2":"paso1");if(rows.length)toast(e.message);return}
   for(let i=0;i<lista.length;i++){
     if(ctl.signal.aborted) break;
     const f=lista[i],fid=++nf;
+    $("leyImg").src=f._url||(f._url=URL.createObjectURL(f));
     try{
       const r=await leerCaptura(f,(k,n)=>{
-        say(`Leyendo captura ${i+1} de ${lista.length}`+(n>1?` · parte ${k+1} de ${n}`:"")+"…");
-        bar((i+k/n)/lista.length);
+        say(lista.length>1?`Leyendo captura ${i+1} de ${lista.length}…`:"Leyendo la captura…");
+        bar((i+(k+1)/n)/lista.length);
       });
-      r.movs.forEach(m=>{rows.push({id:++uid,f:fid,...m});if(/cortada/.test(m.why))cort++});
+      archivos.set(fid,f);
+      r.movs.forEach(m=>{rows.push({id:++uid,f:fid,...m});if(!m.peaje&&!m.importe)cort++});
       raw.push("── "+f.name+" ──\n"+r.texto);
-      if(r.chica) chicas.push(`${f.name} (${r.W} px de ancho)`);
+      if(r.chica) chicas.push(f.name);
     }catch(e){fail.push(`${f.name}: ${e.message||"no se pudo leer"}`)}
   }
-  $("stop").hidden=true;$("go").disabled=!files.length;bar(null);
-  const nuevos=rows.length-antes;
-  let t=(ctl.signal.aborted?"Lectura detenida. ":"Listo: ")+`${nuevos} peajes encontrados en ${lista.length} ${lista.length===1?"captura":"capturas"}.`;
-  if(cort) t+=`\n⚠ ${cort} ${cort===1?"peaje quedó tapado":"peajes quedaron tapados"} donde se unen las pantallas de la captura larga: están en amarillo, completalos mirando la captura.`;
-  if(chicas.length) t+="\n⚠ Estas capturas llegaron con poca calidad y pueden tener errores. Pedilas como documento:\n"+chicas.join("\n");
-  if(fail.length) t+="\nNo se pudieron leer (faltan esos peajes):\n"+fail.join("\n");
-  say(t,fail.length>0);
+  const nuevos=rows.length-antes,cortado=ctl.signal.aborted;
+  avisos=[];
+  if(cortado) avisos.push({e:false,t:"Detuviste la lectura. Se muestran los peajes que se alcanzaron a leer."});
+  if(!nuevos&&!fail.length) avisos.push({e:true,t:"No se encontraron pagos de peaje en "+(lista.length===1?"esa captura":"esas capturas")+". Fijate que sean de la pantalla “Actividad” de Mercado Pago."});
+  if(cort) avisos.push({e:false,t:`${plural(cort,"peaje quedó tapado","peajes quedaron tapados")} donde se unen las pantallas de la captura larga. Están en amarillo: tocalos y completalos.`});
+  if(chicas.length) avisos.push({e:true,t:"Estas capturas llegaron con poca calidad y pueden tener errores. Pedí que te las manden como documento:\n"+chicas.join("\n")});
+  if(fail.length) avisos.push({e:true,t:"No se pudieron leer (faltan esos peajes):\n"+fail.join("\n")});
+  say(`Listo: ${plural(nuevos,"peaje encontrado","peajes encontrados")}.`);
   $("raw").textContent=raw.join("\n\n");$("rawd").hidden=!raw.length;
-  rows.sort(cmp);applyPrev();render();
+  files.forEach(f=>f._url&&URL.revokeObjectURL(f._url));files=[];pintarMinis();
+  bajado=false;filtro=act().some(r=>r.dudoso)?"rev":"todos";
+  render();mostrar(rows.length?"paso2":"paso1");
+  if(!rows.length&&avisos.length){$("err1").textContent=avisos.map(a=>a.t).join("\n\n");$("err1").hidden=false}
 }
 window.procesarArchivos=procesarArchivos;
-window.filasTabla=()=>rows.map(({tr,obs,...r})=>r);
+window.filasTabla=()=>rows.map(r=>({...r}));
 
-$("go").onclick=()=>files.length&&procesarArchivos(files);
-$("stop").onclick=()=>ctl&&ctl.abort();
-
-/* ───────── Revisión, filtros, Excel anterior y Unir Excel (igual que antes) ───────── */
+/* ───────── Paso 2: revisar ───────── */
 let exSet=new Set();
 try{exSet=new Set(JSON.parse(localStorage.getItem("peajes_excluir")||"[]"))}catch(e){}
-function applyExc(){rows.forEach(r=>{r.exc=exSet.has(norm(r.peaje))})}
-function applyPrev(){
-  applyExc();rows.forEach(r=>r.ya=false);
-  if(!prev) return;
-  const m=new Map(prev);
-  [...rows].sort(cmp).forEach(r=>{
-    if(!r.fecha||r.exc) return;
-    const k=r.fecha+"|"+(r.peaje||"").trim().toLowerCase()+"|"+Number(r.importe||0).toFixed(2),c=m.get(k)||0;
-    if(c>0){r.ya=true;m.set(k,c-1)}
-  });
-}
-$("prev").onchange=async e=>{
-  const f=e.target.files[0];if(!f) return;
-  try{
-    const wb=new ExcelJS.Workbook();await wb.xlsx.load(await f.arrayBuffer());
-    const m=new Map();let n=0;
-    wb.worksheets[0].eachRow((row,i)=>{
-      if(i===1) return;
-      const d=row.getCell(1).value,p=row.getCell(2).value;let imp=row.getCell(3).value;
-      if(imp&&typeof imp==="object") imp=imp.result;
-      if(!(d instanceof Date)||!p||typeof imp!=="number") return;
-      const k=d.toISOString().slice(0,10)+"|"+String(p).trim().toLowerCase()+"|"+imp.toFixed(2);
-      m.set(k,(m.get(k)||0)+1);n++;
-    });
-    if(!n) throw new Error("vacío");
-    prev=m;$("pc").textContent=f.name+" · "+n+" peajes";
-    applyPrev();if(rows.length)render();
-  }catch(err){prev=null;applyPrev();$("pc").textContent="No se pudo leer ese Excel. Tiene que ser un .xlsx con el formato de esta página.";}
-};
-function visible(){
-  const v=rows.filter(r=>(vf==="y"?r.ya:vf==="x"?r.exc:!(r.ya||r.exc))&&(!vp||r.peaje===vp)&&(vf!=="d"||r.dudoso)&&(vf!=="r"||r.rep));
-  const fd=(a,b)=>(b.fecha||"0000").localeCompare(a.fecha||"0000")||(b.f-a.f)||(a.id-b.id);
-  const fn={fa:cmp,fd,p:(a,b)=>(a.peaje||"").localeCompare(b.peaje||"")||cmp(a,b),ia:(a,b)=>a.importe-b.importe||cmp(a,b),id:(a,b)=>b.importe-a.importe||cmp(a,b)}[vs]||cmp;
-  return v.sort(fn);
+function marcar(){
+  rows.forEach(r=>{r.exc=exSet.has(norm(r.peaje))});
+  const key=r=>[r.fecha,norm(r.peaje),Number(r.importe||0).toFixed(2)].join("|");
+  const cnt={},fs={};act().forEach(r=>{const k=key(r);cnt[k]=(cnt[k]||0)+1;(fs[k]=fs[k]||new Set()).add(r.f)});
+  rows.forEach(r=>{const k=key(r),n=cnt[k]||0;r.rep=!r.exc&&n>1&&!!r.fecha&&!!r.peaje;r.repN=n;r.repOtro=r.rep&&fs[k].size>1});
 }
 function render(){
-  if(rows.length)$("res").hidden=false;
-  total();
-  const ps=[...new Set(rows.map(r=>r.peaje).filter(Boolean))].sort();
-  if(vp&&!ps.includes(vp))vp="";
-  const sel=$("vp");sel.innerHTML="";sel.add(new Option("Todos",""));ps.forEach(p=>sel.add(new Option(p,p)));
-  sel.value=vp;$("vf").value=vf;$("vs").value=vs;
+  marcar();
+  const A=act(),pend=A.filter(r=>r.dudoso).length,nrep=A.filter(r=>r.rep).length;
+  $("tot").textContent=fmt(A.filter(r=>!incompleto(r)).reduce((s,r)=>s+r.importe,0));
+  $("cnt").textContent=plural(A.length,"peaje","peajes")+(rows.length>A.length?` · ${rows.length-A.length} sacados`:"");
+  $("avisos").innerHTML="";
+  avisos.forEach(a=>{const d=document.createElement("div");d.className=a.e?"aviso-e":"aviso-i";d.textContent=(a.e?"":"ℹ️ ")+a.t;$("avisos").appendChild(d)});
+  const est=$("estado");est.innerHTML="";
+  if(A.length){
+    const d=document.createElement("div");
+    if(pend){
+      d.className="estado w";d.textContent=`⚠ ${plural(pend,"peaje está","peajes están")} en amarillo. Tocá cada uno, compará con la captura y corregí lo que haga falta.`;
+      if(filtro!=="rev"){const b=document.createElement("button");b.className="btn";b.textContent="Ver solo los amarillos";b.onclick=()=>{filtro="rev";render()};d.appendChild(b)}
+    }else{d.className="estado ok";d.textContent="✓ Todo revisado. Ya podés descargar el Excel con el botón verde de abajo."}
+    est.appendChild(d);
+  }
+  if(filtro==="rev"&&!pend) filtro="todos";
+  if(filtro==="rep"&&!nrep) filtro="todos";
+  $("filtros").hidden=!(pend||nrep);
+  [...$("filtros").children].forEach(b=>{
+    const f=b.dataset.f,n=f==="todos"?A.length:f==="rev"?pend:nrep;
+    b.hidden=f!=="todos"&&!n;b.setAttribute("aria-pressed",String(filtro===f));
+    b.textContent=(f==="todos"?"Todos":f==="rev"?"⚠ Para revisar":"Repetidos")+" ("+n+")";
+    b.onclick=()=>{filtro=f;render()};
+  });
+  $("orden").textContent=orden==="nuevos"?"Orden: más nuevos primero ⇅":"Orden: más viejos primero ⇅";
+  // Lista agrupada por día
+  const vis=A.filter(r=>filtro==="todos"||(filtro==="rev"?r.dudoso:r.rep)).sort(orden==="nuevos"?cmpNuevos:cmp);
+  const box=$("lista");box.innerHTML="";
+  if(!vis.length){box.innerHTML='<p class="vacia">No hay peajes para mostrar.</p>'}
+  let dia=null,tit=null,sumDia=0;
+  const cerrarDia=()=>{if(tit)tit.lastChild.textContent=fmt(sumDia)};
+  vis.forEach(r=>{
+    if(r.fecha!==dia){cerrarDia();dia=r.fecha;sumDia=0;tit=document.createElement("h3");tit.className="dia";tit.append(document.createElement("span"),document.createElement("span"));tit.firstChild.textContent=fechaLarga(r.fecha);box.appendChild(tit)}
+    sumDia+=r.importe||0;
+    const b=document.createElement("button");b.type="button";b.className="pj"+(r.dudoso?" w":r.rep?" d":"");
+    const pn=document.createElement("span");pn.className="pn";
+    if(r.peaje)pn.textContent=r.peaje;else{pn.textContent="Peaje sin nombre";pn.classList.add("vacio")}
+    const pm=document.createElement("span");pm.className="pm";pm.textContent=r.importe>0?fmt(r.importe):"$ —";
+    b.append(pn,pm);
+    const tx=r.dudoso?"⚠ "+(r.why||"Revisalo")+" Tocá para revisarlo.":r.rep?`Repetido: hay ${r.repN} iguales este día. Tocá para ver.`:"";
+    if(tx){const px=document.createElement("span");px.className="px";px.textContent=tx;b.appendChild(px)}
+    b.setAttribute("aria-label",(r.peaje||"Peaje sin nombre")+", "+(r.importe>0?fmt(r.importe):"sin importe")+(tx?". "+tx:""));
+    b.onclick=()=>abrir(r);
+    box.appendChild(b);
+  });
+  cerrarDia();
+  // Excluir
   const cn=new Map();
   rows.forEach(r=>{const k=norm(r.peaje);if(!k) return;const c=cn.get(k)||{name:r.peaje,n:0,t:0};c.n++;c.t+=r.importe||0;cn.set(k,c)});
-  const box=$("exl");box.innerHTML="";
+  const ex=$("exl");ex.innerHTML="";
   [...cn.entries()].sort((x,y)=>x[1].name.localeCompare(y[1].name)).forEach(([k,c])=>{
-    const lb=document.createElement("label");lb.style.cssText="display:flex;gap:8px;align-items:center;padding:6px 0";
+    const lb=document.createElement("label");
     const cb=document.createElement("input");cb.type="checkbox";cb.checked=exSet.has(k);
-    cb.onchange=()=>{cb.checked?exSet.add(k):exSet.delete(k);try{localStorage.setItem("peajes_excluir",JSON.stringify([...exSet]))}catch(e){}applyPrev();render()};
-    lb.append(cb,document.createTextNode(c.name+" · "+c.n+(c.n===1?" paso":" pasos")+" · "+fmt(c.t)));
-    box.appendChild(lb);
+    cb.onchange=()=>{cb.checked?exSet.add(k):exSet.delete(k);try{localStorage.setItem("peajes_excluir",JSON.stringify([...exSet]))}catch(e){}render();toast(cb.checked?`${c.name} no va a ir en el Excel`:`${c.name} vuelve al Excel`)};
+    const t=document.createElement("span");const b1=document.createElement("b");b1.textContent=c.name;const s1=document.createElement("small");s1.textContent=plural(c.n,"paso","pasos")+" · "+fmt(c.t)+(cb.checked?" · no va al Excel":"");
+    t.append(b1,s1);lb.append(cb,t);ex.appendChild(lb);
   });
   const ne=[...cn.keys()].filter(k=>exSet.has(k)).length;
-  $("exs").textContent=ne?" ("+ne+(ne===1?" excluido)":" excluidos)"):"";
-  const vis=visible();
-  const na=act().length,nya=rows.filter(r=>r.ya).length,nex=rows.filter(r=>r.exc).length;
-  $("shown").textContent=(nex?`Se excluyeron ${nex} peajes por tu lista de excepciones. `:"")+(nya?`Se descartaron ${nya} que ya estaban en el Excel anterior. `:"")+(vf==="y"||vf==="x"?`Mostrando ${vis.length} ${vf==="y"?"ya cargados":"excluidos"} (no van al Excel).`:vis.length===na?"":`Mostrando ${vis.length} de ${na} peajes. El Excel incluye todos.`);
-  const tb=$("tb");tb.innerHTML="";
-  vis.forEach(r=>{
-    const tr=document.createElement("tr");r.tr=tr;
-    const mk=(type,key,extra)=>{const td=document.createElement("td");const i=document.createElement("input");i.type=type;i.value=r[key];if(extra)Object.assign(i,extra);
-      i.oninput=()=>{r[key]=type==="number"?parseFloat(i.value)||0:i.value;total();};td.appendChild(i);return td};
-    tr.appendChild(mk("date","fecha"));
-    tr.appendChild(mk("text","peaje")).firstChild.setAttribute("list","pl");
-    tr.appendChild(mk("number","importe")).firstChild.step="0.01";
-    const o=document.createElement("td");o.className="o";r.obs=o;tr.appendChild(o);
-    const x=document.createElement("td");x.className="x";const b=document.createElement("button");b.textContent="✕";b.onclick=()=>{rows=rows.filter(q=>q.id!==r.id);render()};x.appendChild(b);tr.appendChild(x);
-    tb.appendChild(tr);
-  });
-  total();
+  $("exs").textContent=ne?`(${ne})`:"";
+  $("exd").hidden=!cn.size;
+  $("dl").disabled=!A.length;$("sh").disabled=!A.length;
 }
-function total(){
-  const A=act();$("cnt").textContent=A.length;$("tot").textContent=fmt(A.reduce((s,r)=>s+(r.importe||0),0));
-  const key=r=>[r.fecha,(r.peaje||"").trim().toLowerCase(),Number(r.importe||0).toFixed(2)].join("|");
-  const cnt={},fs={};A.forEach(r=>{const k=key(r);cnt[k]=(cnt[k]||0)+1;(fs[k]=fs[k]||new Set()).add(r.f)});
-  rows.forEach(r=>{
-    const n=cnt[key(r)],rep=n>1&&r.fecha&&r.peaje;r.rep=!!rep;
-    if(r.tr)r.tr.className=(r.dudoso?"w ":"")+(rep?"d":"");
-    if(r.obs)r.obs.textContent=r.exc?"excluido":r.ya?"ya cargado":(r.dudoso?"⚠ "+(r.why||"dudoso"):"")+(r.dudoso&&rep?" · ":"")+(rep?"⧉ repetido ×"+n+(fs[key(r)].size>1?" (en otro archivo o captura)":""):"");
-  });
-}
-async function readXlsx(f){
-  const wb=new ExcelJS.Workbook();await wb.xlsx.load(await f.arrayBuffer());
-  const out=[];
-  wb.worksheets[0].eachRow((row,i)=>{
-    if(i===1) return;
-    const d=row.getCell(1).value,p=row.getCell(2).value;let imp=row.getCell(3).value;
-    if(imp&&typeof imp==='object') imp=imp.result;
-    if(!(d instanceof Date)||!p||typeof imp!=='number') return;
-    const med=row.getCell(4).value,obs=row.getCell(5).value;
-    out.push({fecha:d.toISOString().slice(0,10),peaje:String(p).trim(),importe:imp,medio:med?String(med):'TelePASE',obs:obs&&typeof obs==='string'?obs:''});
-  });
-  return out;
-}
-window.leerExcel=readXlsx;
-const mkey=r=>r.fecha+'|'+r.peaje.toLowerCase()+'|'+r.importe.toFixed(2);
-async function mergeCalc(){
-  const fl=[...$('mf').files];
-  $('mfc').textContent=fl.length?fl.length+(fl.length===1?' archivo seleccionado':' archivos seleccionados'):'Tocá para elegir los Excel';
-  $('mmsg').className='n';
-  rows=rows.filter(r=>!r.m);
-  if(fl.length<2){
-    $('mmsg').textContent=fl.length?'Elegí al menos dos archivos.':'';
-    applyPrev();$('res').hidden=!rows.length;render();return;
-  }
-  try{
-    const lists=[],bad=[];
-    for(const f of fl){const l=await readXlsx(f);if(!l.length)bad.push(f.name);lists.push(l);}
-    if(bad.length){$('mmsg').textContent='Estos archivos no tienen filas con el formato esperado (Fecha, Peaje, Importe):\n'+bad.join('\n');$('mmsg').className='n e';applyPrev();$('res').hidden=!rows.length;render();return;}
-    const maxc=new Map(),tagged=[];
-    lists.forEach(l=>{
-      const fid=++nf,m=new Map();
-      l.forEach(r=>{const k=mkey(r);m.set(k,(m.get(k)||0)+1);tagged.push({...r,f:fid});});
-      m.forEach((c,k)=>maxc.set(k,Math.max(maxc.get(k)||0,c)));
-    });
-    let pot=tagged.length;maxc.forEach(c=>pot-=c);
-    let all=tagged;
-    if($('mdup').checked){const seen=new Map();all=tagged.filter(r=>{const k=mkey(r),c=seen.get(k)||0;if(c<maxc.get(k)){seen.set(k,c+1);return true}return false});}
-    all.forEach(r=>rows.push({id:++uid,f:r.f,m:true,fecha:r.fecha,peaje:r.peaje,importe:r.importe,dudoso:false,medio:r.medio,obsx:r.obs}));
-    vp="";vf="";
-    rows.sort(cmp);applyPrev();render();
-    $('mmsg').textContent='Se cargaron '+all.length+' peajes de '+fl.length+' archivos en la tabla de arriba. '+(pot?pot+' fila'+(pot>1?'s idénticas aparecen':' idéntica aparece')+' en más de un archivo'+($('mdup').checked?' y se quitaron.':': están marcadas en azul para que las revises.'):'No hay filas idénticas entre archivos.')+'\nRevisalos y descargá con el botón “Descargar Excel”.';
-    $('res').scrollIntoView({behavior:'smooth'});
-  }catch(err){$('mmsg').textContent='No se pudo leer alguno de los archivos. Tienen que ser .xlsx.';$('mmsg').className='n e';}
-}
-$('mf').onchange=mergeCalc;$('mdup').onchange=mergeCalc;
-$("vs").onchange=e=>{vs=e.target.value;render()};
-$("vp").onchange=e=>{vp=e.target.value;render()};
-$("vf").onchange=e=>{vf=e.target.value;render()};
-$("add").onclick=()=>{vp="";vf="";$("res").hidden=false;rows.push({id:++uid,fecha:"",peaje:"",importe:0,dudoso:false});render()};
+$("orden").onclick=()=>{orden=orden==="nuevos"?"viejos":"nuevos";render()};
+$("mas2").onclick=()=>mostrar("paso1");
+$("reset").onclick=async()=>{
+  if(!await preguntar("¿Empezar de nuevo?","Se borra la lista de peajes de la pantalla. Las capturas de tu celular no se tocan.","Sí, empezar de nuevo","No, volver")) return;
+  rows=[];raw=[];avisos=[];archivos.clear();bajado=false;filtro="todos";$("rawd").hidden=true;render();mostrar("paso1");
+};
 
-async function armarExcel(){
+/* ───────── Hoja para revisar / editar un peaje ───────── */
+let editando=null,tokenFig=0;
+function parseImp(s){
+  s=String(s||"").replace(/[^\d.,]/g,"");if(!s) return NaN;
+  if(s.includes(",")) s=s.replace(/\./g,"").replace(",",".");
+  else if((s.match(/\./g)||[]).length>1||/\.\d{3}$/.test(s)) s=s.replace(/\./g,"");
+  return Math.round(parseFloat(s)*100)/100;
+}
+async function recorte(r){
+  const tk=++tokenFig;$("hFig").hidden=true;
+  const f=r&&archivos.get(r.f);if(!f||r.yA==null) return;
+  try{
+    const bmp=await createImageBitmap(f);if(tk!==tokenFig){bmp.close&&bmp.close();return}
+    const W=bmp.width,y0=Math.max(0,Math.floor(r.yA-W*0.2)),y1=Math.min(bmp.height,Math.ceil(r.yB+W*0.07));
+    const c=$("hCan");c.width=W;c.height=y1-y0;c.getContext("2d").drawImage(bmp,0,y0,W,y1-y0,0,0,W,y1-y0);
+    bmp.close&&bmp.close();$("hFig").hidden=false;
+  }catch(e){}
+}
+function abrir(r){
+  editando=r||null;
+  $("hT").textContent=r?(r.dudoso?"Revisar este peaje":"Peaje"):"Agregar un peaje";
+  $("hAviso").hidden=!(r&&r.dudoso);$("hAviso").textContent=r&&r.dudoso?"⚠ "+(r.why||"Revisalo"):"";
+  $("hRep").hidden=!(r&&r.rep);
+  $("hRep").textContent=r&&r.rep?`Hay ${r.repN} peajes iguales este día (mismo peaje e importe)${r.repOtro?", en distintas capturas":""}. Puede ser real (pasó más de una vez) o una captura repetida. Si sobra, borralo.`:"";
+  $("hP").value=r?r.peaje:"";$("hF").value=r?r.fecha:today();$("hI").value=r&&r.importe>0?fmtN(r.importe):"";
+  $("hErr").hidden=true;$("hDel").hidden=!r;
+  $("hOk").textContent=r?"✓ Listo, está bien":"＋ Agregar";
+  const ps=new Set(PEAJES);rows.forEach(x=>x.peaje&&ps.add(x.peaje));
+  $("pl").innerHTML="";[...ps].sort().forEach(p=>{const o=document.createElement("option");o.value=p;$("pl").appendChild(o)});
+  recorte(r);
+  $("hoja").showModal();
+  // Que no se abra el teclado solo: el foco va al título (salvo al agregar uno nuevo).
+  if(r){$("hT").focus();$("hoja").scrollTop=0} else $("hP").focus();
+}
+$("hf").onsubmit=e=>{
+  e.preventDefault();
+  const p=$("hP").value.trim().replace(/\s+/g," "),f=$("hF").value,i=parseImp($("hI").value);
+  const err=!p?["Escribí el nombre del peaje.","hP"]:!f?["Elegí la fecha.","hF"]:!(i>0)?["Escribí el importe (por ejemplo 2.395,04).","hI"]:null;
+  if(err){$("hErr").textContent=err[0];$("hErr").hidden=false;$(err[1]).focus();return}
+  const conocido=PEAJES.find(x=>norm(x)===norm(p));
+  const datos={peaje:conocido||p,fecha:f,importe:i,dudoso:false,why:""};
+  if(editando) Object.assign(editando,datos); else rows.push({id:++uid,f:0,...datos});
+  $("hoja").close();render();toast(editando?"✓ Guardado":"✓ Peaje agregado");
+};
+$("hNo").onclick=()=>$("hoja").close();
+$("hDel").onclick=async()=>{
+  const r=editando;$("hoja").close();
+  if(!r||!await preguntar("¿Borrar este peaje?",`${r.peaje||"Peaje sin nombre"} · ${r.importe>0?fmt(r.importe):"sin importe"} · ${fechaLarga(r.fecha)}`,"Sí, borrarlo","No, dejarlo")) return;
+  rows=rows.filter(q=>q.id!==r.id);render();toast("Peaje borrado");
+};
+$("add").onclick=()=>abrir(null);
+
+/* ───────── Paso 3: Excel ───────── */
+async function armarExcel(lista){
   const wb=new ExcelJS.Workbook();const ws=wb.addWorksheet("Control de Peajes");
   ws.columns=[{width:15},{width:20},{width:15},{width:18},{width:25}];
   const h=ws.addRow(["Fecha","Peaje","Importe","Medio de pago","Observaciones"]);
   h.eachCell(c=>c.font={name:"Calibri",bold:true});
-  const sorted=[...act()].sort(cmp);
+  const sorted=[...(lista||act().filter(r=>!incompleto(r)))].sort(cmp);
   sorted.forEach(r=>{
-    const d=r.fecha?new Date(r.fecha+"T00:00:00Z"):null;
-    const w=ws.addRow([d,r.peaje,r.importe,r.medio||"TelePASE",r.obsx||""]);
+    const w=ws.addRow([new Date(r.fecha+"T00:00:00Z"),r.peaje,r.importe,"TelePASE",""]);
     w.getCell(1).numFmt="d/m/yy";w.getCell(3).numFmt='"$"\\ #,##0.00';
     w.eachCell(c=>c.font={name:"Calibri"});
   });
@@ -544,19 +689,53 @@ async function armarExcel(){
 }
 window.armarExcel=armarExcel;
 
+// Lee un Excel con el formato de esta página (lo usan las pruebas internas).
+async function leerExcel(f){
+  const wb=new ExcelJS.Workbook();await wb.xlsx.load(await f.arrayBuffer());
+  const out=[];
+  wb.worksheets[0].eachRow((row,i)=>{
+    if(i===1) return;
+    const d=row.getCell(1).value,p=row.getCell(2).value;let imp=row.getCell(3).value;
+    if(imp&&typeof imp==="object") imp=imp.result;
+    if(!(d instanceof Date)||!p||typeof imp!=="number") return;
+    out.push({fecha:d.toISOString().slice(0,10),peaje:String(p).trim(),importe:imp});
+  });
+  return out;
+}
+window.leerExcel=leerExcel;
+
+const XLSX="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+async function antesDeBajar(){
+  const A=act(),pend=A.filter(r=>r.dudoso).length;
+  if(pend&&await preguntar(`Quedan ${plural(pend,"peaje","peajes")} en amarillo`,"Conviene revisarlos antes de mandar el Excel.","Revisarlos ahora","Seguir igual")){filtro="rev";render();$("lista").scrollIntoView({behavior:"smooth"});return null}
+  const inc=A.filter(incompleto).length;
+  if(inc&&!await preguntar(`${plural(inc,"peaje no tiene","peajes no tienen")} todos los datos`,"Les falta el nombre, la fecha o el importe. Esos no van a ir en el Excel.","Entendido, seguir","Volver a completarlos")){filtro="rev";render();return null}
+  const lista=A.filter(r=>!incompleto(r));
+  if(!lista.length){toast("No hay peajes completos para el Excel");return null}
+  const buf=await armarExcel(lista);
+  return new File([buf],`control_peajes_${today()}.xlsx`,{type:XLSX});
+}
+function listo(){bajado=true;mostrar("paso2")}
 $("dl").onclick=async()=>{
-  if(!act().length) return;
-  const inc=act().filter(r=>!r.fecha||!r.peaje||!(r.importe>0)).length;
-  if(inc&&!confirm(`Hay ${inc} ${inc===1?"fila":"filas"} sin fecha, peaje o importe. ¿Descargar igual?`)) return;
   try{
-    const buf=await armarExcel();
-    const blob=new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
-    const a=document.createElement("a");a.href=URL.createObjectURL(blob);
-    a.download=`control_peajes${prev?"_nuevos":""}_${today()}.xlsx`;
-    document.body.appendChild(a);a.click();
+    const f=await antesDeBajar();if(!f) return;
+    const a=document.createElement("a");a.href=URL.createObjectURL(f);a.download=f.name;document.body.appendChild(a);a.click();
     setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},5000);
-  }catch(e){say("No se pudo descargar el archivo: "+(e.message||"error"),true)}
+    listo();toast("✓ Excel descargado. Está en la carpeta Descargas.");
+  }catch(e){toast("No se pudo armar el Excel: "+(e.message||"error"))}
 };
+// En el celular se puede mandar directo por WhatsApp o mail.
+try{
+  if(navigator.canShare&&navigator.canShare({files:[new File(["x"],"p.xlsx",{type:XLSX})]})){
+    $("sh").hidden=false;
+    $("sh").onclick=async()=>{
+      try{const f=await antesDeBajar();if(!f) return;await navigator.share({files:[f],title:"Control de peajes"});listo()}
+      catch(e){if(e&&e.name!=="AbortError")toast("No se pudo compartir. Probá con “Descargar Excel”.")}
+    };
+  }
+}catch(e){}
+
+mostrar("paso1");
 </script>
 </body>
 </html>
