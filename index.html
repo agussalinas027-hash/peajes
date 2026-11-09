@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Control de peajes</title>
+<meta name="description" content="Subí las capturas de Mercado Pago y descargá el Excel de peajes.">
+<meta name="theme-color" content="#1e6b3a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Peajes">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231e6b3a'/%3E%3Ctext x='32' y='44' font-size='34' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'%3E$%3C/text%3E%3C/svg%3E">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light;
+--bg:#f6f7f5;--card:#fff;--tx:#1b1f1c;--mut:#667068;--bd:#dde2dc;--ac:#1e6b3a;--act:#fff;--warn:#fff4d6;--err:#b3261e}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#121512;--card:#1b1f1c;--tx:#eef1ee;--mut:#9aa59c;--bd:#2c332e;--ac:#4cbf78;--act:#0b1a10;--warn:#3a3217;--err:#ff8a80}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#121512;--card:#1b1f1c;--tx:#eef1ee;--mut:#9aa59c;--bd:#2c332e;--ac:#4cbf78;--act:#0b1a10;--warn:#3a3217;--err:#ff8a80}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+main{max-width:760px;margin:0 auto;padding:16px}
+h1{font-size:1.4rem;margin:8px 0 4px}p.s{color:var(--mut);margin:0 0 16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:14px}
+button{font:inherit;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:12px 16px;cursor:pointer}
+button.p{background:var(--ac);color:var(--act);border-color:var(--ac);font-weight:600}
+button:disabled{opacity:.5;cursor:default}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.drop{display:block;border:2px dashed var(--bd);border-radius:12px;padding:22px;text-align:center;color:var(--mut);cursor:pointer}
+.drop input{display:none}
+#msg{margin-top:10px;color:var(--mut);white-space:pre-line}#msg.e,#mmsg.e{color:var(--err)}
+.bar{height:6px;border-radius:3px;background:var(--bd);margin-top:10px;overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--ac);transition:width .3s}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:560px}
+th{font-size:.8rem;color:var(--mut);text-align:left;padding:4px}
+td{padding:3px}
+td input{width:100%;font:inherit;color:var(--tx);background:transparent;border:1px solid var(--bd);border-radius:8px;padding:8px}
+tr.w td input{background:var(--warn)}
+tr.d td input{background:rgba(70,130,220,.2)}
+td.o{font-size:.8rem;min-width:150px;max-width:240px}
+.ctl{margin-bottom:6px}
+.ctl label{display:flex;flex-direction:column;gap:2px;font-size:.8rem;color:var(--mut);flex:1;min-width:130px}
+.ctl select{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:8px}
+td.x button{padding:6px 10px}
+.tot{display:flex;justify-content:space-between;font-weight:700;font-size:1.1rem;margin:12px 0}
+.n{font-size:.85rem;color:var(--mut)}
+@media (max-width:620px){
+table{min-width:0}thead{display:none}
+tbody tr{display:grid;grid-template-columns:1fr 1fr auto;gap:6px;padding:8px 0;border-bottom:1px solid var(--bd)}
+tbody td{padding:0}
+td:nth-child(1){grid-column:1;grid-row:1}td:nth-child(3){grid-column:2;grid-row:1}td:nth-child(2){grid-column:1/3;grid-row:2}
+td.x{grid-column:3;grid-row:1/3;align-self:center}td.o{grid-column:1/4;grid-row:3;max-width:none}td.o:empty{display:none}
+}
+pre.raw{white-space:pre-wrap;font-size:.75rem;color:var(--mut);max-height:320px;overflow:auto;margin:6px 0 0}
+</style>
+</head>
+<body>
+<main>
+<h1>Control de peajes</h1>
+<p class="s">Subí las capturas de Mercado Pago y descargá el Excel listo para la empresa. Las capturas se leen en tu propio celular o computadora: no se mandan a ningún lado.</p>
+
+<div class="card">
+<label class="drop" id="drop"><input type="file" id="files" accept="image/*" multiple>
+<strong>Tocá para elegir las capturas</strong><br><span id="fc">Ninguna seleccionada</span></label>
+<label class="drop" style="margin-top:10px;padding:14px"><input type="file" id="prev" accept=".xlsx"><strong>Excel anterior (opcional)</strong><br><span id="pc">Subilo para quedarte solo con los peajes nuevos</span></label>
+<div class="row" style="margin-top:12px">
+<button class="p" id="go" disabled>Leer capturas</button>
+<button id="stop" hidden>Detener</button>
+</div>
+<div class="bar" id="bar" hidden><i></i></div>
+<div id="msg"></div>
+<p class="n" style="margin:10px 0 0">Si las capturas te llegan por WhatsApp, pedí que las manden como <strong>documento</strong> (no como foto), así llegan nítidas.</p>
+</div>
+
+<div class="card" id="res" hidden>
+<div class="n" style="margin-bottom:8px">Revisá los datos antes de descargar. En amarillo (⚠) están los peajes dudosos, donde el lector no estaba seguro: compará con la captura. En azul (⧉) están los posibles repetidos: misma fecha, peaje e importe.</div>
+<details class="card" id="exd" open style="margin:0 0 10px;padding:10px 14px"><summary><strong>Excluir peajes</strong><span id="exs" class="n"></span></summary><div class="n" style="margin:6px 0">Marcá los peajes que no van en el Excel. Se excluyen todos los pasos de ese peaje.</div><div id="exl"></div></details>
+<div class="row ctl"><label>Ordenar por<select id="vs"><option value="fa">Fecha: más vieja primero</option><option value="fd">Fecha: más nueva primero</option><option value="p">Peaje (A–Z)</option><option value="ia">Importe: menor a mayor</option><option value="id">Importe: mayor a menor</option></select></label><label>Peaje<select id="vp"><option value="">Todos</option></select></label><label>Mostrar<select id="vf"><option value="">Todos</option><option value="d">Solo dudosos</option><option value="r">Solo repetidos</option><option value="y">Solo ya cargados</option><option value="x">Solo excluidos</option></select></label></div>
+<div class="n" id="shown" style="margin-bottom:6px"></div>
+<div class="tw"><table><thead><tr><th>Fecha</th><th>Peaje</th><th>Importe</th><th>Obs.</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>
+<datalist id="pl"></datalist>
+<div class="row" style="margin-top:8px"><button id="add">+ Agregar fila</button></div>
+<div class="tot"><span>Total (<span id="cnt">0</span> peajes)</span><span id="tot">$ 0,00</span></div>
+<button class="p" id="dl" style="width:100%">Descargar Excel</button>
+<p class="n">Si hay capturas que se superponen, puede aparecer un peaje repetido: borralo con ✕. Dos pasos iguales el mismo día pueden ser reales.</p>
+<details id="rawd" hidden><summary class="n">Ver el texto que leyó el lector (para encontrar errores)</summary><pre class="raw" id="raw"></pre></details>
+</div>
+<div class='card' id='mg'>
+<strong>Unir Excel</strong>
+<p class='n' style='margin:4px 0 10px'>Elegí dos o más Excel de peajes. Se cargan en la tabla de arriba para que los revises, y desde ahí descargás uno solo, ordenado por fecha y con un único TOTAL.</p>
+<label class='drop' style='padding:14px'><input type='file' id='mf' accept='.xlsx' multiple><span id='mfc'>Tocá para elegir los Excel</span></label>
+<label class='n' style='display:flex;gap:8px;margin:10px 0;align-items:center'><input type='checkbox' id='mdup'> Quitar las filas idénticas que estén en más de un archivo</label>
+<div id='mmsg' class='n' style='white-space:pre-line'></div>
+</div>
+</main>
+<script>
+const PEAJES=["Hudson","Dock Sud","Berazategui","Varela","Remedios","Alberti","Freeflow Au Illia","Paseo del Bajo","Ituzaingó","Posadas","Samborombón"];
+const $=id=>document.getElementById(id);
+let files=[],rows=[],ctl=null,uid=0,nf=0,raw=[];
+const cmp=(a,b)=>(a.fecha||"9999").localeCompare(b.fecha||"9999")||(a.f-b.f)||(b.id-a.id);
+let vs="fa",vp="",vf="",prev=null;
+const act=()=>rows.filter(r=>!r.ya&&!r.exc);
+const fmt=n=>"$ "+Number(n||0).toLocaleString("es-AR",{minimumFractionDigits:2,maximumFractionDigits:2});
+const iso=(y,m,d)=>y+"-"+String(m).padStart(2,"0")+"-"+String(d).padStart(2,"0");
+const isoD=d=>iso(d.getFullYear(),d.getMonth()+1,d.getDate());
+const today=()=>isoD(new Date());
+const say=(t,e)=>{$("msg").textContent=t;$("msg").className=e?"e":""};
+const bar=p=>{$("bar").hidden=p==null;if(p!=null)$("bar").firstChild.style.width=Math.round(p*100)+"%"};
+const norm=t=>String(t||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/\s+/g," ").trim();
+$("pl").innerHTML=PEAJES.map(p=>`<option value="${p}">`).join("");
+
+$("files").onchange=e=>{
+  files=[...e.target.files];
+  $("fc").textContent=files.length?files.length+(files.length===1?" captura seleccionada":" capturas seleccionadas"):"Ninguna seleccionada";
+  $("go").disabled=!files.length;
+};
+
+/* ───────── Lector de texto (OCR) ───────── */
+let worker=null;
+async function lector(){
+  if(worker) return worker;
+  if(!window.Tesseract) throw new Error("No se pudo cargar el lector de texto. Revisá la conexión a internet y recargá la página.");
+  say("Preparando el lector de texto (la primera vez tarda un poco más, después queda guardado)…");
+  worker=await Tesseract.createWorker("spa",1,{logger:m=>{
+    if(m.status&&/load|download|initial/i.test(m.status)&&m.progress<1) say("Preparando el lector de texto… "+Math.round((m.progress||0)*100)+"%");
+  }});
+  await worker.setParameters({tessedit_pageseg_mode:"11",preserve_interword_spaces:"1"});
+  return worker;
+}
+
+function lev(a,b){
+  const m=a.length,n=b.length;if(!m) return n;if(!n) return m;
+  let p=Array.from({length:n+1},(_,j)=>j);
+  for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}
+  return p[n];
+}
+const sim=(a,b)=>1-lev(a,b)/Math.max(a.length,b.length,1);
+const MESES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+function mesDe(t){
+  let best=0,bs=0;
+  MESES.concat(["setiembre"]).forEach((m,i)=>{const s=sim(t,m);if(s>bs){bs=s;best=i<12?i+1:9}});
+  return bs>=0.7?best:0;
+}
+
+// Fecha de referencia de la captura: el nombre (Screenshot_20260806_…) es lo más confiable.
+function refDate(f){
+  const m=f.name.match(/(20\d{2})[-_.]?([01]\d)[-_.]?([0-3]\d)/);
+  if(m){const d=new Date(+m[1],+m[2]-1,+m[3]);if(d.getMonth()===+m[2]-1&&d<=new Date(Date.now()+864e5)) return {d,seguro:true}}
+  return {d:f.lastModified?new Date(f.lastModified):new Date(),seguro:false};
+}
+
+function fechaTitulo(txt,ref){
+  const t=norm(txt).replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim();
+  if(!t||t.length>32) return null;
+  if(t.length<=4&&sim(t,"hoy")>=0.66) return {fecha:isoD(ref.d),rel:true};
+  if(t.length<=5&&sim(t,"ayer")>=0.75){const d=new Date(ref.d);d.setDate(d.getDate()-1);return {fecha:isoD(d),rel:true}}
+  const m=t.match(/^(?:[a-z]+ )?(\d{1,2}) (?:[a-z]{1,3} )?([a-z]{3,})(?: (?:[a-z]{1,3} )?(20\d{2}))?$/);
+  if(!m) return null;
+  const d=+m[1],mes=mesDe(m[2]);
+  if(!mes||d<1||d>31) return null;
+  let y=m[3]?+m[3]:ref.d.getFullYear();
+  if(!m[3]&&new Date(y,mes-1,d)>new Date(ref.d.getTime()+864e5)) y--;
+  return {fecha:iso(y,mes,d),rel:false};
+}
+
+// Importe argentino: "-$ 2.395,04" → 2395.04
+function dinero(t){
+  const re=/([-–—−~]?)\s*[$§S]\s*(\d[\d.,]*)(?:\s(\d{2})(?![\d:]))?/g;
+  let m,last=null;
+  while((m=re.exec(t))) last=m;
+  if(!last) return null;
+  const s=last[2].replace(/[.,]+$/,""),x=last[3];let v=NaN,ok=false,q;
+  if((q=s.match(/^(\d{1,3}(?:[.,]\d{3})*),(\d{2})$/))){v=+(q[1].replace(/\D/g,"")+"."+q[2]);ok=true}
+  else if(x&&/^\d{1,3}(?:\.\d{3})*$/.test(s)) v=+(s.replace(/\D/g,"")+"."+x);
+  else if((q=s.match(/^(\d{1,3}(?:\.\d{3})*)\.(\d{2})$/))) v=+(q[1].replace(/\D/g,"")+"."+q[2]);
+  else if((q=s.match(/^(\d{1,3}(?:\.\d{3})*)(\d{2})$/))) v=+(q[1].replace(/\D/g,"")+"."+q[2]);
+  else if(/^\d{1,3}(?:\.\d{3})*$/.test(s)) v=+s.replace(/\D/g,"");
+  return {v,ok:ok&&v>0,neg:!!last[1],i:last.index,txt:t.slice(last.index).trim()};
+}
+
+const esPeajeTxt=t=>norm(t).replace(/[^a-z ]/g," ").split(" ").some(w=>w.length>=4&&w.length<=7&&sim(w,"peaje")>=0.8);
+const RUIDO=/\b(pago|de|peaje|peajes|telepase|tele|pase)\b/g;
+
+function nombrePeaje(titulo,todo){
+  const prueba=txt=>{
+    const tk=norm(txt).replace(/[^a-z0-9 ]/g," ").split(" ").filter(Boolean);
+    let best=null,bs=0;
+    PEAJES.forEach(P=>{
+      const pt=norm(P).split(" "),pj=pt.join("");
+      for(let L=Math.max(1,pt.length-1);L<=pt.length+1;L++)
+        for(let i=0;i+L<=tk.length;i++){
+          const w=tk.slice(i,i+L);
+          const s=Math.max(sim(w.join(" "),pt.join(" ")),sim(w.join(""),pj));
+          if(s>bs){bs=s;best=P}
+        }
+    });
+    return {best,bs};
+  };
+  let r=prueba(titulo);
+  if(r.bs<0.8){const r2=prueba(todo);if(r2.bs>r.bs)r=r2}
+  if(r.bs>=0.8) return {peaje:r.best,seguro:true};
+  if(r.bs>=0.7) return {peaje:r.best,seguro:false};
+  const limpio=t=>t.replace(/[^\p{L}\p{N} .'-]/gu," ").replace(/\s+/g," ").trim();
+  for(const t of [titulo,todo]){
+    let c=limpio(t).split(" ").filter(w=>!norm(w).match(/^(pago|de|peaje|peajes|telepase)$/)&&/\p{L}{2,}/u.test(w)).join(" ").trim();
+    if(c.replace(/[^\p{L}]/gu,"").length>=3) return {peaje:c,seguro:false};
+  }
+  return {peaje:"",seguro:false};
+}
+
+async function findCut(bmp,W,end,span,minEnd){
+  const y0=Math.max(minEnd,end-span),h=end-y0;
+  if(h<=0) return end;
+  const c=document.createElement("canvas");c.width=W;c.height=h;
+  const g=c.getContext("2d",{willReadFrequently:true});
+  g.drawImage(bmp,0,y0,W,h,0,0,W,h);
+  const d=g.getImageData(0,0,W,h).data;
+  // Busca una franja en blanco de al menos 8 píxeles y corta en el medio, así nunca parte un renglón.
+  let run=0;
+  for(let r=h-1;r>=0;r--){
+    let mn=255,mx=0,blank=true;
+    for(let x=0;x<W;x++){const v=d[(r*W+x)*4+1];if(v<mn)mn=v;if(v>mx)mx=v;if(mx-mn>12){blank=false;break}}
+    if(blank){if(++run>=8) return y0+r+4}else run=0;
+  }
+  return end;
+}
+
+// Prepara un tramo de la captura para el lector: lo agranda si es chica, lo pasa a gris,
+// borra los íconos verdes de TelePASE (su texto blanco confunde al lector) y da vuelta el modo oscuro.
+function tramo(bmp,W,y,h,sc,x=0){
+  const c=document.createElement("canvas");c.width=Math.round(W*sc);c.height=Math.round(h*sc);
+  const g=c.getContext("2d",{willReadFrequently:true});
+  g.imageSmoothingEnabled=true;g.imageSmoothingQuality="high";
+  g.drawImage(bmp,x,y,W,h,0,0,c.width,c.height);
+  const im=g.getImageData(0,0,c.width,c.height),d=im.data,N=d.length/4,gr=new Uint8ClampedArray(N),mk=new Uint8Array(N);
+  let sum=0,cnt=0;
+  for(let i=0,p=0;p<N;i+=4,p++){
+    const r=d[i],G=d[i+1],b=d[i+2];
+    if(G-r>30&&G>=b-10){mk[p]=1;continue}
+    const v=0.299*r+0.587*G+0.114*b;gr[p]=v;sum+=v;cnt++;
+  }
+  const oscuro=cnt&&sum/cnt<110;
+  for(let i=0,p=0;p<N;i+=4,p++){
+    let v=mk[p]?(oscuro?0:255):gr[p];
+    if(oscuro)v=255-v;
+    d[i]=d[i+1]=d[i+2]=v;d[i+3]=255;
+  }
+  g.putImageData(im,0,0);
+  return c;
+}
+
+function palabras(data,y0,sc){
+  const out=[];
+  const push=w=>{const t=(w.text||"").trim();if(!t)return;const b=w.bbox;
+    out.push({t,c:w.confidence,x0:b.x0/sc,x1:b.x1/sc,y0:y0+b.y0/sc,y1:y0+b.y1/sc,cy:y0+(b.y0+b.y1)/2/sc,h:(b.y1-b.y0)/sc})};
+  if(data.blocks&&data.blocks.length) data.blocks.forEach(B=>(B.paragraphs||[]).forEach(P=>(P.lines||[]).forEach(L=>(L.words||[]).forEach(push))));
+  else (data.words||[]).forEach(push);
+  return out;
+}
+
+function armarFilas(ws){
+  ws=ws.slice().sort((a,b)=>a.cy-b.cy);
+  const out=[];
+  for(const w of ws){
+    let r=null;
+    for(let k=out.length-1;k>=0&&k>=out.length-4;k--){const q=out[k];if(Math.abs(q.cy-w.cy)<=Math.max(Math.min(q.h,w.h),4)*0.6){r=q;break}}
+    if(r){r.ws.push(w);r.cy=(r.cy*(r.ws.length-1)+w.cy)/r.ws.length;r.h=Math.max(r.h,w.h);r.y0=Math.min(r.y0,w.y0);r.y1=Math.max(r.y1,w.y1)}
+    else out.push({ws:[w],cy:w.cy,h:w.h,y0:w.y0,y1:w.y1});
+  }
+  out.forEach(r=>{r.ws.sort((a,b)=>a.x0-b.x0);r.text=r.ws.map(w=>w.t).join(" ");r.conf=Math.min(...r.ws.map(w=>w.c))});
+  return out.sort((a,b)=>a.cy-b.cy);
+}
+
+// Recorre los renglones de arriba hacia abajo: títulos de fecha, renglones con importe y sus descripciones.
+function movimientos(filas,ref){
+  const out=[];let fecha="",rel=false,fm=false,cur=null;
+  const cerrar=()=>{if(cur){out.push(cur);cur=null}};
+  for(const r of filas){
+    if(r.tituloIlegible){cerrar();fm=true;continue}
+    const mon=dinero(r.text);
+    if(!mon){const h=fechaTitulo(r.text,ref);if(h){cerrar();fecha=h.fecha;rel=h.rel;fm=false;continue}}
+    if(mon){cerrar();const dw=r.ws.filter(w=>/\d/.test(w.t));cur={fecha,rel,fm,mon,tit:r.text.slice(0,mon.i),lin:[r.text],y1:r.y1,h:r.h,conf:dw.length?Math.min(...dw.map(w=>w.c)):r.conf};continue}
+    const pj=esPeajeTxt(r.text);
+    if(cur&&r.y0-cur.y1<cur.h*2.5&&!(pj&&cur.lin.slice(1).some(esPeajeTxt))){cur.lin.push(r.text);cur.y1=r.y1;continue}
+    cerrar();
+    // Renglón suelto que dice "peaje" sin importe: movimiento tapado al unir la captura larga.
+    // Lo que sigue hasta el próximo título puede tener la fecha corrida (el título pudo quedar tapado).
+    if(pj){out.push({fecha,rel,fm,cortado:true,lin:[r.text]});fm=true}
+  }
+  cerrar();
+  const res=[];
+  for(const b of out){
+    const todo=b.lin.join(" ");
+    if(/devoluc|reintegr|cancelad|reembols/i.test(norm(todo))) continue;
+    if(b.cortado){res.push({fecha:b.fecha,peaje:"",importe:0,dudoso:true,why:"captura cortada: falta nombre e importe, completalo mirando la captura"+(b.fm?" (y verificá la fecha)":"")});continue}
+    const n=nombrePeaje(b.tit,todo);
+    const dicePeaje=esPeajeTxt(todo);
+    if(!dicePeaje&&!n.seguro) continue; // no es un peaje (transferencias, compras, etc.)
+    const why=[];
+    if(!b.fecha) why.push("sin fecha");
+    else if(b.fm) why.push("verificá la fecha (hay un título tapado o borroso más arriba)");
+    else if(b.rel&&!ref.seguro) why.push("fecha “Hoy/Ayer”: verificala");
+    if(!n.seguro) why.push(n.peaje?"nombre no reconocido":"falta el nombre");
+    // Si el importe no tiene la forma exacta "1.571,11" no se adivina: queda en 0 para completarlo a mano.
+    const impOk=b.mon.ok&&b.mon.v>0;
+    if(!impOk) why.push(`importe ilegible (se leyó “${b.mon.txt}”): completalo`);
+    else if(b.conf<40) why.push("lectura poco clara: compará el importe");
+    if(!dicePeaje) why.push("no dice “Pago de peaje”");
+    res.push({fecha:b.fecha,peaje:n.peaje,importe:impOk?Math.round(b.mon.v*100)/100:0,dudoso:why.length>0,why:why.join(" · "),cf:Math.round(b.conf)});
+  }
+  return res;
+}
+
+async function leerCaptura(f,avance){
+  let bmp;
+  try{bmp=await createImageBitmap(f)}catch(e){throw new Error("no se pudo abrir la imagen")}
+  const W=bmp.width,H=bmp.height;
+  const sc=W<1000?Math.min(3,1100/W):W>1600?1300/W:1;
+  const T=Math.max(400,Math.floor(2400/sc));
+  const cortes=[];let y=0;
+  while(y<H){
+    let end=Math.min(y+T,H);
+    if(end<H) end=await findCut(bmp,W,end,Math.floor(T*0.3),y+Math.floor(T*0.5));
+    cortes.push([y,end]);y=end;
+  }
+  const w=await lector(),ws=[];
+  for(let k=0;k<cortes.length;k++){
+    if(ctl.signal.aborted) break;
+    avance(k,cortes.length);
+    const [y0,y1]=cortes[k];
+    const {data}=await w.recognize(tramo(bmp,W,y0,y1-y0,sc),{},{blocks:true});
+    ws.push(...palabras(data,y0,sc));
+  }
+  const filas=armarFilas(ws),ref=refDate(f);
+  // Renglones cortos pegados al margen izquierdo = títulos de fecha. Si no se entendieron, se releen con más zoom.
+  for(const r of filas){
+    if(ctl.signal.aborted) break;
+    if(r.ws[0].x0>0.09*W||r.text.length>24||dinero(r.text)||fechaTitulo(r.text,ref)||esPeajeTxt(r.text)) continue;
+    if((r.text.match(/[\p{L}\d]/gu)||[]).length<3||/\d{1,2}:\d{2}/.test(r.text)) continue; // restos de íconos o la hora del celular
+    const y0=Math.max(0,Math.floor(r.y0-8)),y1=Math.min(H,Math.ceil(r.y1+8)),cw=Math.round(W*0.6);
+    try{
+      await w.setParameters({tessedit_pageseg_mode:"7"});
+      const {data}=await w.recognize(tramo(bmp,cw,y0,y1-y0,Math.max(sc*1.5,3)),{});
+      const t2=(data.text||"").trim();
+      if(fechaTitulo(t2,ref)) r.text=t2; else r.tituloIlegible=true;
+    }catch(e){r.tituloIlegible=true}
+    finally{await w.setParameters({tessedit_pageseg_mode:"11"})}
+  }
+  bmp.close&&bmp.close();
+  window._filas=filas;
+  return {movs:movimientos(filas,ref),texto:filas.map(r=>r.tituloIlegible?"[título de fecha ilegible: "+r.text+"]":r.text).join("\n"),chica:W<500,W};
+}
+
+async function procesarArchivos(lista){
+  ctl=new AbortController();
+  $("go").disabled=true;$("stop").hidden=false;bar(0);
+  let fail=[],chicas=[],cort=0,antes=rows.length;
+  try{await lector()}catch(e){say(e.message,true);$("stop").hidden=true;$("go").disabled=!files.length;bar(null);return}
+  for(let i=0;i<lista.length;i++){
+    if(ctl.signal.aborted) break;
+    const f=lista[i],fid=++nf;
+    try{
+      const r=await leerCaptura(f,(k,n)=>{
+        say(`Leyendo captura ${i+1} de ${lista.length}`+(n>1?` · parte ${k+1} de ${n}`:"")+"…");
+        bar((i+k/n)/lista.length);
+      });
+      r.movs.forEach(m=>{rows.push({id:++uid,f:fid,...m});if(/cortada/.test(m.why))cort++});
+      raw.push("── "+f.name+" ──\n"+r.texto);
+      if(r.chica) chicas.push(`${f.name} (${r.W} px de ancho)`);
+    }catch(e){fail.push(`${f.name}: ${e.message||"no se pudo leer"}`)}
+  }
+  $("stop").hidden=true;$("go").disabled=!files.length;bar(null);
+  const nuevos=rows.length-antes;
+  let t=(ctl.signal.aborted?"Lectura detenida. ":"Listo: ")+`${nuevos} peajes encontrados en ${lista.length} ${lista.length===1?"captura":"capturas"}.`;
+  if(cort) t+=`\n⚠ ${cort} ${cort===1?"peaje quedó tapado":"peajes quedaron tapados"} donde se unen las pantallas de la captura larga: están en amarillo, completalos mirando la captura.`;
+  if(chicas.length) t+="\n⚠ Estas capturas llegaron con poca calidad y pueden tener errores. Pedilas como documento:\n"+chicas.join("\n");
+  if(fail.length) t+="\nNo se pudieron leer (faltan esos peajes):\n"+fail.join("\n");
+  say(t,fail.length>0);
+  $("raw").textContent=raw.join("\n\n");$("rawd").hidden=!raw.length;
+  rows.sort(cmp);applyPrev();render();
+}
+window.procesarArchivos=procesarArchivos;
+window.filasTabla=()=>rows.map(({tr,obs,...r})=>r);
+
+$("go").onclick=()=>files.length&&procesarArchivos(files);
+$("stop").onclick=()=>ctl&&ctl.abort();
+
+/* ───────── Revisión, filtros, Excel anterior y Unir Excel (igual que antes) ───────── */
+let exSet=new Set();
+try{exSet=new Set(JSON.parse(localStorage.getItem("peajes_excluir")||"[]"))}catch(e){}
+function applyExc(){rows.forEach(r=>{r.exc=exSet.has(norm(r.peaje))})}
+function applyPrev(){
+  applyExc();rows.forEach(r=>r.ya=false);
+  if(!prev) return;
+  const m=new Map(prev);
+  [...rows].sort(cmp).forEach(r=>{
+    if(!r.fecha||r.exc) return;
+    const k=r.fecha+"|"+(r.peaje||"").trim().toLowerCase()+"|"+Number(r.importe||0).toFixed(2),c=m.get(k)||0;
+    if(c>0){r.ya=true;m.set(k,c-1)}
+  });
+}
+$("prev").onchange=async e=>{
+  const f=e.target.files[0];if(!f) return;
+  try{
+    const wb=new ExcelJS.Workbook();await wb.xlsx.load(await f.arrayBuffer());
+    const m=new Map();let n=0;
+    wb.worksheets[0].eachRow((row,i)=>{
+      if(i===1) return;
+      const d=row.getCell(1).value,p=row.getCell(2).value;let imp=row.getCell(3).value;
+      if(imp&&typeof imp==="object") imp=imp.result;
+      if(!(d instanceof Date)||!p||typeof imp!=="number") return;
+      const k=d.toISOString().slice(0,10)+"|"+String(p).trim().toLowerCase()+"|"+imp.toFixed(2);
+      m.set(k,(m.get(k)||0)+1);n++;
+    });
+    if(!n) throw new Error("vacío");
+    prev=m;$("pc").textContent=f.name+" · "+n+" peajes";
+    applyPrev();if(rows.length)render();
+  }catch(err){prev=null;applyPrev();$("pc").textContent="No se pudo leer ese Excel. Tiene que ser un .xlsx con el formato de esta página.";}
+};
+function visible(){
+  const v=rows.filter(r=>(vf==="y"?r.ya:vf==="x"?r.exc:!(r.ya||r.exc))&&(!vp||r.peaje===vp)&&(vf!=="d"||r.dudoso)&&(vf!=="r"||r.rep));
+  const fd=(a,b)=>(b.fecha||"0000").localeCompare(a.fecha||"0000")||(b.f-a.f)||(a.id-b.id);
+  const fn={fa:cmp,fd,p:(a,b)=>(a.peaje||"").localeCompare(b.peaje||"")||cmp(a,b),ia:(a,b)=>a.importe-b.importe||cmp(a,b),id:(a,b)=>b.importe-a.importe||cmp(a,b)}[vs]||cmp;
+  return v.sort(fn);
+}
+function render(){
+  if(rows.length)$("res").hidden=false;
+  total();
+  const ps=[...new Set(rows.map(r=>r.peaje).filter(Boolean))].sort();
+  if(vp&&!ps.includes(vp))vp="";
+  const sel=$("vp");sel.innerHTML="";sel.add(new Option("Todos",""));ps.forEach(p=>sel.add(new Option(p,p)));
+  sel.value=vp;$("vf").value=vf;$("vs").value=vs;
+  const cn=new Map();
+  rows.forEach(r=>{const k=norm(r.peaje);if(!k) return;const c=cn.get(k)||{name:r.peaje,n:0,t:0};c.n++;c.t+=r.importe||0;cn.set(k,c)});
+  const box=$("exl");box.innerHTML="";
+  [...cn.entries()].sort((x,y)=>x[1].name.localeCompare(y[1].name)).forEach(([k,c])=>{
+    const lb=document.createElement("label");lb.style.cssText="display:flex;gap:8px;align-items:center;padding:6px 0";
+    const cb=document.createElement("input");cb.type="checkbox";cb.checked=exSet.has(k);
+    cb.onchange=()=>{cb.checked?exSet.add(k):exSet.delete(k);try{localStorage.setItem("peajes_excluir",JSON.stringify([...exSet]))}catch(e){}applyPrev();render()};
+    lb.append(cb,document.createTextNode(c.name+" · "+c.n+(c.n===1?" paso":" pasos")+" · "+fmt(c.t)));
+    box.appendChild(lb);
+  });
+  const ne=[...cn.keys()].filter(k=>exSet.has(k)).length;
+  $("exs").textContent=ne?" ("+ne+(ne===1?" excluido)":" excluidos)"):"";
+  const vis=visible();
+  const na=act().length,nya=rows.filter(r=>r.ya).length,nex=rows.filter(r=>r.exc).length;
+  $("shown").textContent=(nex?`Se excluyeron ${nex} peajes por tu lista de excepciones. `:"")+(nya?`Se descartaron ${nya} que ya estaban en el Excel anterior. `:"")+(vf==="y"||vf==="x"?`Mostrando ${vis.length} ${vf==="y"?"ya cargados":"excluidos"} (no van al Excel).`:vis.length===na?"":`Mostrando ${vis.length} de ${na} peajes. El Excel incluye todos.`);
+  const tb=$("tb");tb.innerHTML="";
+  vis.forEach(r=>{
+    const tr=document.createElement("tr");r.tr=tr;
+    const mk=(type,key,extra)=>{const td=document.createElement("td");const i=document.createElement("input");i.type=type;i.value=r[key];if(extra)Object.assign(i,extra);
+      i.oninput=()=>{r[key]=type==="number"?parseFloat(i.value)||0:i.value;total();};td.appendChild(i);return td};
+    tr.appendChild(mk("date","fecha"));
+    tr.appendChild(mk("text","peaje")).firstChild.setAttribute("list","pl");
+    tr.appendChild(mk("number","importe")).firstChild.step="0.01";
+    const o=document.createElement("td");o.className="o";r.obs=o;tr.appendChild(o);
+    const x=document.createElement("td");x.className="x";const b=document.createElement("button");b.textContent="✕";b.onclick=()=>{rows=rows.filter(q=>q.id!==r.id);render()};x.appendChild(b);tr.appendChild(x);
+    tb.appendChild(tr);
+  });
+  total();
+}
+function total(){
+  const A=act();$("cnt").textContent=A.length;$("tot").textContent=fmt(A.reduce((s,r)=>s+(r.importe||0),0));
+  const key=r=>[r.fecha,(r.peaje||"").trim().toLowerCase(),Number(r.importe||0).toFixed(2)].join("|");
+  const cnt={},fs={};A.forEach(r=>{const k=key(r);cnt[k]=(cnt[k]||0)+1;(fs[k]=fs[k]||new Set()).add(r.f)});
+  rows.forEach(r=>{
+    const n=cnt[key(r)],rep=n>1&&r.fecha&&r.peaje;r.rep=!!rep;
+    if(r.tr)r.tr.className=(r.dudoso?"w ":"")+(rep?"d":"");
+    if(r.obs)r.obs.textContent=r.exc?"excluido":r.ya?"ya cargado":(r.dudoso?"⚠ "+(r.why||"dudoso"):"")+(r.dudoso&&rep?" · ":"")+(rep?"⧉ repetido ×"+n+(fs[key(r)].size>1?" (en otro archivo o captura)":""):"");
+  });
+}
+async function readXlsx(f){
+  const wb=new ExcelJS.Workbook();await wb.xlsx.load(await f.arrayBuffer());
+  const out=[];
+  wb.worksheets[0].eachRow((row,i)=>{
+    if(i===1) return;
+    const d=row.getCell(1).value,p=row.getCell(2).value;let imp=row.getCell(3).value;
+    if(imp&&typeof imp==='object') imp=imp.result;
+    if(!(d instanceof Date)||!p||typeof imp!=='number') return;
+    const med=row.getCell(4).value,obs=row.getCell(5).value;
+    out.push({fecha:d.toISOString().slice(0,10),peaje:String(p).trim(),importe:imp,medio:med?String(med):'TelePASE',obs:obs&&typeof obs==='string'?obs:''});
+  });
+  return out;
+}
+window.leerExcel=readXlsx;
+const mkey=r=>r.fecha+'|'+r.peaje.toLowerCase()+'|'+r.importe.toFixed(2);
+async function mergeCalc(){
+  const fl=[...$('mf').files];
+  $('mfc').textContent=fl.length?fl.length+(fl.length===1?' archivo seleccionado':' archivos seleccionados'):'Tocá para elegir los Excel';
+  $('mmsg').className='n';
+  rows=rows.filter(r=>!r.m);
+  if(fl.length<2){
+    $('mmsg').textContent=fl.length?'Elegí al menos dos archivos.':'';
+    applyPrev();$('res').hidden=!rows.length;render();return;
+  }
+  try{
+    const lists=[],bad=[];
+    for(const f of fl){const l=await readXlsx(f);if(!l.length)bad.push(f.name);lists.push(l);}
+    if(bad.length){$('mmsg').textContent='Estos archivos no tienen filas con el formato esperado (Fecha, Peaje, Importe):\n'+bad.join('\n');$('mmsg').className='n e';applyPrev();$('res').hidden=!rows.length;render();return;}
+    const maxc=new Map(),tagged=[];
+    lists.forEach(l=>{
+      const fid=++nf,m=new Map();
+      l.forEach(r=>{const k=mkey(r);m.set(k,(m.get(k)||0)+1);tagged.push({...r,f:fid});});
+      m.forEach((c,k)=>maxc.set(k,Math.max(maxc.get(k)||0,c)));
+    });
+    let pot=tagged.length;maxc.forEach(c=>pot-=c);
+    let all=tagged;
+    if($('mdup').checked){const seen=new Map();all=tagged.filter(r=>{const k=mkey(r),c=seen.get(k)||0;if(c<maxc.get(k)){seen.set(k,c+1);return true}return false});}
+    all.forEach(r=>rows.push({id:++uid,f:r.f,m:true,fecha:r.fecha,peaje:r.peaje,importe:r.importe,dudoso:false,medio:r.medio,obsx:r.obs}));
+    vp="";vf="";
+    rows.sort(cmp);applyPrev();render();
+    $('mmsg').textContent='Se cargaron '+all.length+' peajes de '+fl.length+' archivos en la tabla de arriba. '+(pot?pot+' fila'+(pot>1?'s idénticas aparecen':' idéntica aparece')+' en más de un archivo'+($('mdup').checked?' y se quitaron.':': están marcadas en azul para que las revises.'):'No hay filas idénticas entre archivos.')+'\nRevisalos y descargá con el botón “Descargar Excel”.';
+    $('res').scrollIntoView({behavior:'smooth'});
+  }catch(err){$('mmsg').textContent='No se pudo leer alguno de los archivos. Tienen que ser .xlsx.';$('mmsg').className='n e';}
+}
+$('mf').onchange=mergeCalc;$('mdup').onchange=mergeCalc;
+$("vs").onchange=e=>{vs=e.target.value;render()};
+$("vp").onchange=e=>{vp=e.target.value;render()};
+$("vf").onchange=e=>{vf=e.target.value;render()};
+$("add").onclick=()=>{vp="";vf="";$("res").hidden=false;rows.push({id:++uid,fecha:"",peaje:"",importe:0,dudoso:false});render()};
+
+async function armarExcel(){
+  const wb=new ExcelJS.Workbook();const ws=wb.addWorksheet("Control de Peajes");
+  ws.columns=[{width:15},{width:20},{width:15},{width:18},{width:25}];
+  const h=ws.addRow(["Fecha","Peaje","Importe","Medio de pago","Observaciones"]);
+  h.eachCell(c=>c.font={name:"Calibri",bold:true});
+  const sorted=[...act()].sort(cmp);
+  sorted.forEach(r=>{
+    const d=r.fecha?new Date(r.fecha+"T00:00:00Z"):null;
+    const w=ws.addRow([d,r.peaje,r.importe,r.medio||"TelePASE",r.obsx||""]);
+    w.getCell(1).numFmt="d/m/yy";w.getCell(3).numFmt='"$"\\ #,##0.00';
+    w.eachCell(c=>c.font={name:"Calibri"});
+  });
+  const n=sorted.length+1;
+  const t=ws.addRow([null,"TOTAL:",{formula:`SUM(C2:C${n})`,result:sorted.reduce((s,r)=>s+r.importe,0)}]);
+  t.getCell(3).numFmt='"$"\\ #,##0.00';t.eachCell(c=>c.font={name:"Calibri"});
+  return wb.xlsx.writeBuffer();
+}
+window.armarExcel=armarExcel;
+
+$("dl").onclick=async()=>{
+  if(!act().length) return;
+  const inc=act().filter(r=>!r.fecha||!r.peaje||!(r.importe>0)).length;
+  if(inc&&!confirm(`Hay ${inc} ${inc===1?"fila":"filas"} sin fecha, peaje o importe. ¿Descargar igual?`)) return;
+  try{
+    const buf=await armarExcel();
+    const blob=new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+    a.download=`control_peajes${prev?"_nuevos":""}_${today()}.xlsx`;
+    document.body.appendChild(a);a.click();
+    setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},5000);
+  }catch(e){say("No se pudo descargar el archivo: "+(e.message||"error"),true)}
+};
+</script>
+</body>
+</html>
