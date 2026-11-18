@@ -132,7 +132,7 @@ pre.raw{white-space:pre-wrap;font-size:.75rem;max-height:320px;overflow:auto;mar
       <li>Las capturas no salen de tu celular: se leen acá mismo.</li>
     </ul>
   </details>
-  <p class="version">Versión 17/11 (3)</p>
+  <p class="version">Versión 17/11 (4)</p>
 </section>
 
 <!-- PASO 1b: leyendo -->
@@ -256,7 +256,19 @@ function pintarMinis(){
   $("fc").textContent=files.length?(files.length===1?"1 captura elegida":files.length+" capturas elegidas"):"";
   $("go").disabled=!files.length;
 }
-$("files").onchange=e=>{files.push(...e.target.files);e.target.value="";$("err1").hidden=true;pintarMinis()};
+// Apenas se eligen, las fotos se copian a la memoria de la página. En Android (Samsung), si se espera,
+// el celular puede quitar el permiso de leerlas y aparece "el celular no dejó leer el archivo".
+$("files").onchange=async e=>{
+  const sel=[...e.target.files],malas=[];
+  $("err1").hidden=true;$("fc").textContent="Cargando las capturas…";$("go").disabled=true;
+  for(const f of sel){
+    try{const buf=await f.arrayBuffer();files.push(new File([buf],f.name,{type:f.type||"image/jpeg",lastModified:f.lastModified||Date.now()}))}
+    catch(err){malas.push(f.name)}
+  }
+  e.target.value="";
+  if(malas.length){$("err1").textContent="El celular no dejó abrir "+(malas.length===1?"esta captura":"estas capturas")+":\n"+malas.join("\n")+"\nSi están en Google Fotos o en la nube, descargalas al celular y elegilas de nuevo.";$("err1").hidden=false}
+  pintarMinis();
+};
 $("go").onclick=()=>files.length&&procesarArchivos(files.slice());
 $("volver").onclick=()=>mostrar("paso2");
 $("stop").onclick=()=>ctl&&ctl.abort();
